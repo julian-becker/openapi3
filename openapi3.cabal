@@ -1,5 +1,5 @@
 name:                openapi3
-version:             2.2
+version:             0.0
 synopsis:            OpenAPI 2.0 data model
 description:
   This library is inteded to be used for decoding and encoding OpenAPI 2.0 API
