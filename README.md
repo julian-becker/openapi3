@@ -1,39 +1,39 @@
-# swagger2
+# openapi3
 
-[![Join the chat at https://gitter.im/haskell-swagger2/Lobby](https://badges.gitter.im/haskell-swagger2/Lobby.svg)](https://gitter.im/haskell-swagger2/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/haskell-openapi3/Lobby](https://badges.gitter.im/haskell-openapi3/Lobby.svg)](https://gitter.im/haskell-openapi3/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[![Hackage](https://img.shields.io/hackage/v/swagger2.svg)](http://hackage.haskell.org/package/swagger2)
-[![Build Status](https://travis-ci.org/GetShopTV/swagger2.svg?branch=master)](https://travis-ci.org/GetShopTV/swagger2)
-[![Stackage LTS](http://stackage.org/package/swagger2/badge/lts)](http://stackage.org/lts/package/swagger2)
-[![Stackage Nightly](http://stackage.org/package/swagger2/badge/nightly)](http://stackage.org/nightly/package/swagger2)
+[![Hackage](https://img.shields.io/hackage/v/openapi3.svg)](http://hackage.haskell.org/package/openapi3)
+[![Build Status](https://travis-ci.org/GetShopTV/openapi3.svg?branch=master)](https://travis-ci.org/GetShopTV/openapi3)
+[![Stackage LTS](http://stackage.org/package/openapi3/badge/lts)](http://stackage.org/lts/package/openapi3)
+[![Stackage Nightly](http://stackage.org/package/openapi3/badge/nightly)](http://stackage.org/nightly/package/openapi3)
 
-Swagger 2.0 data model.
+OpenAPI 2.0 data model.
 
-The original Swagger 2.0 specification is available at http://swagger.io/specification/.
+The original OpenAPI 2.0 specification is available at http://openapi.io/specification/.
 
 ## Usage
 
-This library is intended to be used for decoding and encoding Swagger 2.0 API specifications as well as manipulating them.
+This library is intended to be used for decoding and encoding OpenAPI 2.0 API specifications as well as manipulating them.
 
-Please refer to [haddock documentation](http://hackage.haskell.org/package/swagger2).
+Please refer to [haddock documentation](http://hackage.haskell.org/package/openapi3).
 
 Some examples can be found in [`examples/` directory](/examples).
 
 ## Trying out
 
-All generated swagger specifications can be interactively viewed on [Swagger Editor](http://editor.swagger.io/).
+All generated openapi specifications can be interactively viewed on [OpenAPI Editor](http://editor.openapi.io/).
 
 Ready-to-use specification can be served as JSON and interactive API documentation
-can be displayed using [Swagger UI](https://github.com/swagger-api/swagger-ui).
+can be displayed using [OpenAPI UI](https://github.com/openapi-api/openapi-ui).
 
-Many Swagger tools, including server and client code generation for many languages, can be found on
-[Swagger's Tools and Integrations page](http://swagger.io/open-source-integrations/).
+Many OpenAPI tools, including server and client code generation for many languages, can be found on
+[OpenAPI's Tools and Integrations page](http://openapi.io/open-source-integrations/).
 
 ## Contributing
 
 We are happy to receive bug reports, fixes, documentation enhancements, and other improvements.
 
-Please report bugs via the [github issue tracker](https://github.com/GetShopTV/swagger2/issues).
+Please report bugs via the [github issue tracker](https://github.com/GetShopTV/openapi3/issues).
 
 *GetShopTV Team*
 

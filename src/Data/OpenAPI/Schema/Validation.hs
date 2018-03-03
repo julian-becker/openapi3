@@ -1,10 +1,10 @@
 -- |
--- Module:      Data.Swagger.Schema.Validation
+-- Module:      Data.OpenAPI.Schema.Validation
 -- Maintainer:  Nickolay Kudasov <nickolay@getshoptv.com>
 -- Stability:   experimental
 --
--- Validate JSON values with Swagger Schema.
-module Data.Swagger.Schema.Validation (
+-- Validate JSON values with OpenAPI Schema.
+module Data.OpenAPI.Schema.Validation (
   -- * How to use validation
   -- $howto
 
@@ -27,13 +27,13 @@ module Data.Swagger.Schema.Validation (
   validateJSONWithPatternChecker,
 ) where
 
-import Data.Swagger.Internal.Schema.Validation
+import Data.OpenAPI.Internal.Schema.Validation
 
 -- $setup
 -- >>> import Control.Lens
 -- >>> import Data.Aeson
 -- >>> import Data.Proxy
--- >>> import Data.Swagger
+-- >>> import Data.OpenAPI
 -- >>> import GHC.Generics
 -- >>> :set -XDeriveGeneric
 
@@ -42,7 +42,7 @@ import Data.Swagger.Internal.Schema.Validation
 -- This module provides helpful functions for JSON validation.
 -- These functions are meant to be used in test suites for your application
 -- to ensure that JSON respresentation for your data corresponds to
--- schemas you're using for the Swagger specification.
+-- schemas you're using for the OpenAPI specification.
 --
 -- It is recommended to use validation functions as QuickCheck properties
 -- (see <http://hackage.haskell.org/package/QuickCheck>).
@@ -69,11 +69,11 @@ import Data.Swagger.Internal.Schema.Validation
 -- generally fails for @null@ JSON:
 --
 -- >>> validateToJSON (Nothing :: Maybe String)
--- ["expected JSON value of type SwaggerString"]
+-- ["expected JSON value of type OpenAPIString"]
 -- >>> validateToJSON ([Just "hello", Nothing] :: [Maybe String])
--- ["expected JSON value of type SwaggerString"]
+-- ["expected JSON value of type OpenAPIString"]
 -- >>> validateToJSON (123, Nothing :: Maybe String)
--- ["expected JSON value of type SwaggerString"]
+-- ["expected JSON value of type OpenAPIString"]
 --
 -- However, when @'Maybe' a@ is a type of a record field,
 -- validation takes @'required'@ property of the @'Schema'@

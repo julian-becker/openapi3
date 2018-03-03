@@ -1,10 +1,10 @@
 -- |
--- Module:      Data.Swagger.Schema
+-- Module:      Data.OpenAPI.Schema
 -- Maintainer:  Nickolay Kudasov <nickolay@getshoptv.com>
 -- Stability:   experimental
 --
--- Types and functions for working with Swagger schema.
-module Data.Swagger.Schema (
+-- Types and functions for working with OpenAPI schema.
+module Data.OpenAPI.Schema (
   -- * Encoding
   ToSchema(..),
   declareSchema,
@@ -56,5 +56,5 @@ module Data.Swagger.Schema (
   defaultSchemaOptions,
 ) where
 
-import Data.Swagger.Internal.Schema
-import Data.Swagger.SchemaOptions
+import Data.OpenAPI.Internal.Schema
+import Data.OpenAPI.SchemaOptions

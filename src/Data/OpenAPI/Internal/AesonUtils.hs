@@ -8,19 +8,19 @@
 #if __GLASGOW_HASKELL__ >= 800
 {-# LANGUAGE UndecidableSuperClasses #-}
 #endif
-module Data.Swagger.Internal.AesonUtils (
+module Data.OpenAPI.Internal.AesonUtils (
     -- * Generic functions
     AesonDefaultValue(..),
-    sopSwaggerGenericToJSON,
+    sopOpenAPIGenericToJSON,
 #if MIN_VERSION_aeson(0,10,0)
-    sopSwaggerGenericToEncoding,
+    sopOpenAPIGenericToEncoding,
 #endif
-    sopSwaggerGenericToJSONWithOpts,
-    sopSwaggerGenericParseJSON,
+    sopOpenAPIGenericToJSONWithOpts,
+    sopOpenAPIGenericParseJSON,
     -- * Options
-    HasSwaggerAesonOptions(..),
-    SwaggerAesonOptions,
-    mkSwaggerAesonOptions,
+    HasOpenAPIAesonOptions(..),
+    OpenAPIAesonOptions,
+    mkOpenAPIAesonOptions,
     saoPrefix,
     saoAdditionalPairs,
     saoSubObject,
@@ -51,24 +51,24 @@ import Data.Monoid ((<>))
 #endif
 
 -------------------------------------------------------------------------------
--- SwaggerAesonOptions
+-- OpenAPIAesonOptions
 -------------------------------------------------------------------------------
 
-data SwaggerAesonOptions = SwaggerAesonOptions
+data OpenAPIAesonOptions = OpenAPIAesonOptions
     { _saoPrefix          :: String
     , _saoAdditionalPairs :: [(Text, Value)]
     , _saoSubObject       :: Maybe String
     }
 
-mkSwaggerAesonOptions
+mkOpenAPIAesonOptions
     :: String  -- ^ prefix
-    -> SwaggerAesonOptions
-mkSwaggerAesonOptions pfx = SwaggerAesonOptions pfx [] Nothing
+    -> OpenAPIAesonOptions
+mkOpenAPIAesonOptions pfx = OpenAPIAesonOptions pfx [] Nothing
 
-makeLenses ''SwaggerAesonOptions
+makeLenses ''OpenAPIAesonOptions
 
-class (Generic a, All2 AesonDefaultValue (Code a)) => HasSwaggerAesonOptions a where
-    swaggerAesonOptions :: proxy a -> SwaggerAesonOptions
+class (Generic a, All2 AesonDefaultValue (Code a)) => HasOpenAPIAesonOptions a where
+    openapiAesonOptions :: proxy a -> OpenAPIAesonOptions
 
     -- So far we use only default definitions
     aesonDefaults :: proxy a -> POP Maybe (Code a)
@@ -92,34 +92,34 @@ instance AesonDefaultValue (InsOrd.InsOrdHashMap k v) where defaultValue = Just 
 -- ToJSON
 -------------------------------------------------------------------------------
 
--- | Generic serialisation for swagger records.
+-- | Generic serialisation for openapi records.
 --
 -- Features
 --
 -- * omits nulls, empty objects and empty arrays (configurable)
 -- * possible to add fields
 -- * possible to merge sub-object
-sopSwaggerGenericToJSON
+sopOpenAPIGenericToJSON
     :: forall a xs.
         ( HasDatatypeInfo a
-        , HasSwaggerAesonOptions a
+        , HasOpenAPIAesonOptions a
         , All2 ToJSON (Code a)
         , All2 Eq (Code a)
         , Code a ~ '[xs]
         )
     => a
     -> Value
-sopSwaggerGenericToJSON x =
-    let ps = sopSwaggerGenericToJSON' opts (from x) (datatypeInfo proxy) (aesonDefaults proxy)
+sopOpenAPIGenericToJSON x =
+    let ps = sopOpenAPIGenericToJSON' opts (from x) (datatypeInfo proxy) (aesonDefaults proxy)
     in object (opts ^. saoAdditionalPairs ++ ps)
   where
     proxy = Proxy :: Proxy a
-    opts  = swaggerAesonOptions proxy
+    opts  = openapiAesonOptions proxy
 
--- | *TODO:* This is only used by ToJSON (ParamSchema SwaggerKindSchema)
+-- | *TODO:* This is only used by ToJSON (ParamSchema OpenAPIKindSchema)
 --
 -- Also uses default `aesonDefaults`
-sopSwaggerGenericToJSONWithOpts
+sopOpenAPIGenericToJSONWithOpts
     :: forall a xs.
         ( Generic a
         , All2 AesonDefaultValue (Code a)
@@ -128,35 +128,35 @@ sopSwaggerGenericToJSONWithOpts
         , All2 Eq (Code a)
         , Code a ~ '[xs]
         )
-    => SwaggerAesonOptions
+    => OpenAPIAesonOptions
     -> a
     -> Value
-sopSwaggerGenericToJSONWithOpts opts x =
-    let ps = sopSwaggerGenericToJSON' opts (from x) (datatypeInfo proxy) defs
+sopOpenAPIGenericToJSONWithOpts opts x =
+    let ps = sopOpenAPIGenericToJSON' opts (from x) (datatypeInfo proxy) defs
     in object (opts ^. saoAdditionalPairs ++ ps)
   where
     proxy = Proxy :: Proxy a
     defs = hcpure (Proxy :: Proxy AesonDefaultValue) defaultValue
 
-sopSwaggerGenericToJSON'
+sopOpenAPIGenericToJSON'
     :: (All2 ToJSON '[xs], All2 Eq '[xs])
-    => SwaggerAesonOptions
+    => OpenAPIAesonOptions
     -> SOP I '[xs]
     -> DatatypeInfo '[xs]
     -> POP Maybe '[xs]
     -> [Pair]
-sopSwaggerGenericToJSON' opts (SOP (Z fields)) (ADT _ _ (Record _ fieldsInfo :* Nil)) (POP (defs :* Nil)) =
-    sopSwaggerGenericToJSON'' opts fields fieldsInfo defs
-sopSwaggerGenericToJSON' _ _ _ _ = error "sopSwaggerGenericToJSON: unsupported type"
+sopOpenAPIGenericToJSON' opts (SOP (Z fields)) (ADT _ _ (Record _ fieldsInfo :* Nil)) (POP (defs :* Nil)) =
+    sopOpenAPIGenericToJSON'' opts fields fieldsInfo defs
+sopOpenAPIGenericToJSON' _ _ _ _ = error "sopOpenAPIGenericToJSON: unsupported type"
 
-sopSwaggerGenericToJSON''
+sopOpenAPIGenericToJSON''
     :: (All ToJSON xs, All Eq xs)
-    => SwaggerAesonOptions
+    => OpenAPIAesonOptions
     -> NP I xs
     -> NP FieldInfo xs
     -> NP Maybe xs
     -> [Pair]
-sopSwaggerGenericToJSON'' (SwaggerAesonOptions prefix _ sub) = go
+sopOpenAPIGenericToJSON'' (OpenAPIAesonOptions prefix _ sub) = go
   where
     go :: (All ToJSON ys, All Eq ys) => NP I ys -> NP FieldInfo ys -> NP Maybe ys -> [Pair]
     go  Nil Nil Nil = []
@@ -164,7 +164,7 @@ sopSwaggerGenericToJSON'' (SwaggerAesonOptions prefix _ sub) = go
         | Just name' == sub = case json of
               Object m -> HM.toList m ++ rest
               Null     -> rest
-              _        -> error $ "sopSwaggerGenericToJSON: subjson is not an object: " ++ show json
+              _        -> error $ "sopOpenAPIGenericToJSON: subjson is not an object: " ++ show json
         -- If default value: omit it.
         | Just x == def =
             rest
@@ -187,24 +187,24 @@ sopSwaggerGenericToJSON'' (SwaggerAesonOptions prefix _ sub) = go
 -- FromJSON
 -------------------------------------------------------------------------------
 
-sopSwaggerGenericParseJSON
+sopOpenAPIGenericParseJSON
     :: forall a xs.
         ( HasDatatypeInfo a
-        , HasSwaggerAesonOptions a
+        , HasOpenAPIAesonOptions a
         , All2 FromJSON (Code a)
         , All2 Eq (Code a)
         , Code a ~ '[xs]
         )
     => Value
     -> Parser a
-sopSwaggerGenericParseJSON = withObject "Swagger Record Object" $ \obj ->
-    let ps = sopSwaggerGenericParseJSON' opts obj (datatypeInfo proxy) (aesonDefaults proxy)
+sopOpenAPIGenericParseJSON = withObject "OpenAPI Record Object" $ \obj ->
+    let ps = sopOpenAPIGenericParseJSON' opts obj (datatypeInfo proxy) (aesonDefaults proxy)
     in do
         traverse_ (parseAdditionalField obj) (opts ^. saoAdditionalPairs)
         to <$> ps
   where
     proxy = Proxy :: Proxy a
-    opts  = swaggerAesonOptions proxy
+    opts  = openapiAesonOptions proxy
 
     parseAdditionalField :: Object -> (Text, Value) -> Parser ()
     parseAdditionalField obj (k, v) = do
@@ -214,25 +214,25 @@ sopSwaggerGenericParseJSON = withObject "Swagger Record Object" $ \obj ->
             ++ ": " ++ show v
             ++ " /= " ++ show v'
 
-sopSwaggerGenericParseJSON'
+sopOpenAPIGenericParseJSON'
     :: (All2 FromJSON '[xs], All2 Eq '[xs])
-    => SwaggerAesonOptions
+    => OpenAPIAesonOptions
     -> Object
     -> DatatypeInfo '[xs]
     -> POP Maybe '[xs]
     -> Parser (SOP I '[xs])
-sopSwaggerGenericParseJSON' opts obj (ADT _ _ (Record _ fieldsInfo :* Nil)) (POP (defs :* Nil)) =
-    SOP . Z <$> sopSwaggerGenericParseJSON'' opts obj fieldsInfo defs
-sopSwaggerGenericParseJSON' _ _ _ _ = error "sopSwaggerGenericParseJSON: unsupported type"
+sopOpenAPIGenericParseJSON' opts obj (ADT _ _ (Record _ fieldsInfo :* Nil)) (POP (defs :* Nil)) =
+    SOP . Z <$> sopOpenAPIGenericParseJSON'' opts obj fieldsInfo defs
+sopOpenAPIGenericParseJSON' _ _ _ _ = error "sopOpenAPIGenericParseJSON: unsupported type"
 
-sopSwaggerGenericParseJSON''
+sopOpenAPIGenericParseJSON''
     :: (All FromJSON xs, All Eq xs)
-    => SwaggerAesonOptions
+    => OpenAPIAesonOptions
     -> Object
     -> NP FieldInfo xs
     -> NP Maybe xs
     -> Parser (NP I xs)
-sopSwaggerGenericParseJSON'' (SwaggerAesonOptions prefix _ sub) obj = go
+sopOpenAPIGenericParseJSON'' (OpenAPIAesonOptions prefix _ sub) obj = go
   where
     go :: (All FromJSON ys, All Eq ys) => NP FieldInfo ys -> NP Maybe ys -> Parser (NP I ys)
     go  Nil Nil = pure Nil
@@ -266,45 +266,45 @@ sopSwaggerGenericParseJSON'' (SwaggerAesonOptions prefix _ sub) obj = go
 
 #if MIN_VERSION_aeson(0,10,0)
 
-sopSwaggerGenericToEncoding
+sopOpenAPIGenericToEncoding
     :: forall a xs.
         ( HasDatatypeInfo a
-        , HasSwaggerAesonOptions a
+        , HasOpenAPIAesonOptions a
         , All2 ToJSON (Code a)
         , All2 Eq (Code a)
         , Code a ~ '[xs]
         )
     => a
     -> Encoding
-sopSwaggerGenericToEncoding x =
-    let ps = sopSwaggerGenericToEncoding' opts (from x) (datatypeInfo proxy) (aesonDefaults proxy)
+sopOpenAPIGenericToEncoding x =
+    let ps = sopOpenAPIGenericToEncoding' opts (from x) (datatypeInfo proxy) (aesonDefaults proxy)
     in pairs (pairsToSeries (opts ^. saoAdditionalPairs) <> ps)
   where
     proxy = Proxy :: Proxy a
-    opts  = swaggerAesonOptions proxy
+    opts  = openapiAesonOptions proxy
 
 pairsToSeries :: [Pair] -> Series
 pairsToSeries = foldMap (\(k, v) -> (k .= v))
 
-sopSwaggerGenericToEncoding'
+sopOpenAPIGenericToEncoding'
     :: (All2 ToJSON '[xs], All2 Eq '[xs])
-    => SwaggerAesonOptions
+    => OpenAPIAesonOptions
     -> SOP I '[xs]
     -> DatatypeInfo '[xs]
     -> POP Maybe '[xs]
     -> Series
-sopSwaggerGenericToEncoding' opts (SOP (Z fields)) (ADT _ _ (Record _ fieldsInfo :* Nil)) (POP (defs :* Nil)) =
-    sopSwaggerGenericToEncoding'' opts fields fieldsInfo defs
-sopSwaggerGenericToEncoding' _ _ _ _ = error "sopSwaggerGenericToEncoding: unsupported type"
+sopOpenAPIGenericToEncoding' opts (SOP (Z fields)) (ADT _ _ (Record _ fieldsInfo :* Nil)) (POP (defs :* Nil)) =
+    sopOpenAPIGenericToEncoding'' opts fields fieldsInfo defs
+sopOpenAPIGenericToEncoding' _ _ _ _ = error "sopOpenAPIGenericToEncoding: unsupported type"
 
-sopSwaggerGenericToEncoding''
+sopOpenAPIGenericToEncoding''
     :: (All ToJSON xs, All Eq xs)
-    => SwaggerAesonOptions
+    => OpenAPIAesonOptions
     -> NP I xs
     -> NP FieldInfo xs
     -> NP Maybe xs
     -> Series
-sopSwaggerGenericToEncoding'' (SwaggerAesonOptions prefix _ sub) = go
+sopOpenAPIGenericToEncoding'' (OpenAPIAesonOptions prefix _ sub) = go
   where
     go :: (All ToJSON ys, All Eq ys) => NP I ys -> NP FieldInfo ys -> NP Maybe ys -> Series
     go  Nil Nil Nil = mempty
@@ -312,7 +312,7 @@ sopSwaggerGenericToEncoding'' (SwaggerAesonOptions prefix _ sub) = go
         | Just name' == sub = case toJSON x of
               Object m -> pairsToSeries (HM.toList m) <> rest
               Null     -> rest
-              _        -> error $ "sopSwaggerGenericToJSON: subjson is not an object: " ++ show (toJSON x)
+              _        -> error $ "sopOpenAPIGenericToJSON: subjson is not an object: " ++ show (toJSON x)
         -- If default value: omit it.
         | Just x == def =
             rest

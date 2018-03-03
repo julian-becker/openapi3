@@ -4,7 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeOperators #-}
-module Data.Swagger.Internal.Utils where
+module Data.OpenAPI.Internal.Utils where
 
 import Prelude ()
 import Prelude.Compat
@@ -27,10 +27,10 @@ import Data.Text (Text)
 import GHC.Generics
 import Language.Haskell.TH (mkName)
 
-swaggerFieldRules :: LensRules
-swaggerFieldRules = defaultFieldRules & lensField %~ swaggerFieldNamer
+openapiFieldRules :: LensRules
+openapiFieldRules = defaultFieldRules & lensField %~ openapiFieldNamer
   where
-    swaggerFieldNamer namer dname fnames fname =
+    openapiFieldNamer namer dname fnames fname =
       map fixDefName (namer dname fnames fname)
 
     fixDefName (MethodName cname mname) = MethodName cname (fixName mname)
@@ -95,40 +95,40 @@ instance (GMonoid f, GMonoid g) => GMonoid (f :*: g) where
   gmempty = gmempty :*: gmempty
   gmappend (a :*: x) (b :*: y) = gmappend a b :*: gmappend x y
 
-instance SwaggerMonoid a => GMonoid (K1 i a) where
-  gmempty = K1 swaggerMempty
-  gmappend (K1 x) (K1 y) = K1 (swaggerMappend x y)
+instance OpenAPIMonoid a => GMonoid (K1 i a) where
+  gmempty = K1 openapiMempty
+  gmappend (K1 x) (K1 y) = K1 (openapiMappend x y)
 
 instance GMonoid f => GMonoid (M1 i t f) where
   gmempty = M1 gmempty
   gmappend (M1 x) (M1 y) = M1 (gmappend x y)
 
-class SwaggerMonoid m where
-  swaggerMempty :: m
-  swaggerMappend :: m -> m -> m
-  default swaggerMempty :: Monoid m => m
-  swaggerMempty = mempty
-  default swaggerMappend :: Monoid m => m -> m -> m
-  swaggerMappend = mappend
+class OpenAPIMonoid m where
+  openapiMempty :: m
+  openapiMappend :: m -> m -> m
+  default openapiMempty :: Monoid m => m
+  openapiMempty = mempty
+  default openapiMappend :: Monoid m => m -> m -> m
+  openapiMappend = mappend
 
-instance SwaggerMonoid [a]
-instance Ord a => SwaggerMonoid (Set a)
-instance Ord k => SwaggerMonoid (Map k v)
+instance OpenAPIMonoid [a]
+instance Ord a => OpenAPIMonoid (Set a)
+instance Ord k => OpenAPIMonoid (Map k v)
 
-instance (Eq k, Hashable k) => SwaggerMonoid (HashMap k v) where
-  swaggerMempty = mempty
-  swaggerMappend = HashMap.unionWith (\_old new -> new)
+instance (Eq k, Hashable k) => OpenAPIMonoid (HashMap k v) where
+  openapiMempty = mempty
+  openapiMappend = HashMap.unionWith (\_old new -> new)
 
-instance (Eq k, Hashable k) => SwaggerMonoid (InsOrdHashMap k v) where
-  swaggerMempty = mempty
-  swaggerMappend = InsOrdHashMap.unionWith (\_old new -> new)
+instance (Eq k, Hashable k) => OpenAPIMonoid (InsOrdHashMap k v) where
+  openapiMempty = mempty
+  openapiMappend = InsOrdHashMap.unionWith (\_old new -> new)
 
-instance SwaggerMonoid Text where
-  swaggerMempty = mempty
-  swaggerMappend x "" = x
-  swaggerMappend _ y = y
+instance OpenAPIMonoid Text where
+  openapiMempty = mempty
+  openapiMappend x "" = x
+  openapiMappend _ y = y
 
-instance SwaggerMonoid (Maybe a) where
-  swaggerMempty = Nothing
-  swaggerMappend x Nothing = x
-  swaggerMappend _ y = y
+instance OpenAPIMonoid (Maybe a) where
+  openapiMempty = Nothing
+  openapiMappend x Nothing = x
+  openapiMappend _ y = y

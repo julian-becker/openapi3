@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
-module Data.Swagger.ParamSchemaSpec where
+module Data.OpenAPI.ParamSchemaSpec where
 
 import Data.Aeson (Value)
 import Data.Aeson.QQ
@@ -11,14 +11,14 @@ import Data.Char
 import Data.Proxy
 import GHC.Generics
 
-import Data.Swagger
-import Data.Swagger.Internal (SwaggerKind(..))
+import Data.OpenAPI
+import Data.OpenAPI.Internal (OpenAPIKind(..))
 
 import SpecCommon
 import Test.Hspec
 
 checkToParamSchema :: ToParamSchema a => Proxy a -> Value -> Spec
-checkToParamSchema proxy js = (toParamSchema proxy :: ParamSchema ('SwaggerKindNormal Param)) <=> js
+checkToParamSchema proxy js = (toParamSchema proxy :: ParamSchema ('OpenAPIKindNormal Param)) <=> js
 
 spec :: Spec
 spec = do

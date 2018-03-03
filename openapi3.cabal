@@ -1,19 +1,19 @@
-name:                swagger2
+name:                openapi3
 version:             2.2
-synopsis:            Swagger 2.0 data model
+synopsis:            OpenAPI 2.0 data model
 description:
-  This library is inteded to be used for decoding and encoding Swagger 2.0 API
+  This library is inteded to be used for decoding and encoding OpenAPI 2.0 API
   specifications as well as manipulating them.
   .
-  The original Swagger 2.0 specification is available at http://swagger.io/specification/.
-homepage:            https://github.com/GetShopTV/swagger2
-bug-reports:         https://github.com/GetShopTV/swagger2/issues
+  The original OpenAPI 2.0 specification is available at http://openapi.io/specification/.
+homepage:            https://github.com/GetShopTV/openapi3
+bug-reports:         https://github.com/GetShopTV/openapi3/issues
 license:             BSD3
 license-file:        LICENSE
 author:              Nickolay Kudasov
 maintainer:          nickolay@getshoptv.com
 copyright:           (c) 2015-2016, GetShopTV
-category:            Web, Swagger
+category:            Web, OpenAPI
 build-type:          Custom
 extra-source-files:
     README.md
@@ -31,23 +31,23 @@ library
   hs-source-dirs:      src
   include-dirs:        include
   exposed-modules:
-    Data.Swagger
-    Data.Swagger.Declare
-    Data.Swagger.Lens
-    Data.Swagger.Operation
-    Data.Swagger.ParamSchema
-    Data.Swagger.Schema
-    Data.Swagger.Schema.Validation
-    Data.Swagger.SchemaOptions
+    Data.OpenAPI
+    Data.OpenAPI.Declare
+    Data.OpenAPI.Lens
+    Data.OpenAPI.Operation
+    Data.OpenAPI.ParamSchema
+    Data.OpenAPI.Schema
+    Data.OpenAPI.Schema.Validation
+    Data.OpenAPI.SchemaOptions
 
     -- internal modules
-    Data.Swagger.Internal
-    Data.Swagger.Internal.Schema
-    Data.Swagger.Internal.Schema.Validation
-    Data.Swagger.Internal.ParamSchema
-    Data.Swagger.Internal.Utils
-    Data.Swagger.Internal.AesonUtils
-    Data.Swagger.Internal.TypeShape
+    Data.OpenAPI.Internal
+    Data.OpenAPI.Internal.Schema
+    Data.OpenAPI.Internal.Schema.Validation
+    Data.OpenAPI.Internal.ParamSchema
+    Data.OpenAPI.Internal.Utils
+    Data.OpenAPI.Internal.AesonUtils
+    Data.OpenAPI.Internal.TypeShape
   build-depends:       base        >=4.7   && <4.11
                      , base-compat >=0.9.1 && <0.10
                      , aeson       >=0.11.2.1
@@ -90,7 +90,7 @@ test-suite spec
                   , HUnit
                   , mtl
                   , QuickCheck >=2.8.2
-                  , swagger2
+                  , openapi3
                   , text
                   , time
                   , unordered-containers
@@ -98,10 +98,10 @@ test-suite spec
                   , lens
   other-modules:
     SpecCommon
-    Data.SwaggerSpec
-    Data.Swagger.ParamSchemaSpec
-    Data.Swagger.SchemaSpec
-    Data.Swagger.Schema.ValidationSpec
+    Data.OpenAPISpec
+    Data.OpenAPI.ParamSchemaSpec
+    Data.OpenAPI.SchemaSpec
+    Data.OpenAPI.Schema.ValidationSpec
   default-language: Haskell2010
   -- https://github.com/haskell/cabal/issues/3708
   build-tool-depends:
@@ -117,4 +117,4 @@ test-suite doctests
 
 source-repository head
   type:     git
-  location: https://github.com/GetShopTV/swagger2.git
+  location: https://github.com/GetShopTV/openapi3.git

@@ -12,40 +12,40 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 #include "overlapping-compat.h"
 -- |
--- Module:      Data.Swagger.Lens
+-- Module:      Data.OpenAPI.Lens
 -- Maintainer:  Nickolay Kudasov <nickolay@getshoptv.com>
 -- Stability:   experimental
 --
--- Lenses and prisms for Swagger.
-module Data.Swagger.Lens where
+-- Lenses and prisms for OpenAPI.
+module Data.OpenAPI.Lens where
 
 import Control.Lens
 import Data.Aeson (Value)
 import Data.Scientific (Scientific)
-import Data.Swagger.Internal
-import Data.Swagger.Internal.Utils
+import Data.OpenAPI.Internal
+import Data.OpenAPI.Internal.Utils
 import Data.Text (Text)
 
 -- * Classy lenses
 
-makeFields ''Swagger
+makeFields ''OpenAPI
 makeFields ''Host
 makeFields ''Info
 makeFields ''Contact
 makeFields ''License
-makeLensesWith swaggerFieldRules ''PathItem
+makeLensesWith openapiFieldRules ''PathItem
 makeFields ''Tag
 makeFields ''Operation
 makeFields ''Param
-makeLensesWith swaggerFieldRules ''ParamOtherSchema
+makeLensesWith openapiFieldRules ''ParamOtherSchema
 makeFields ''Header
 makeFields ''Schema
 makeFields ''NamedSchema
-makeLensesWith swaggerFieldRules ''ParamSchema
+makeLensesWith openapiFieldRules ''ParamSchema
 makeFields ''Xml
-makeLensesWith swaggerFieldRules ''Responses
+makeLensesWith openapiFieldRules ''Responses
 makeFields ''Response
-makeLensesWith swaggerFieldRules ''SecurityScheme
+makeLensesWith openapiFieldRules ''SecurityScheme
 makeFields ''ApiKeyParams
 makeFields ''OAuth2Params
 makeFields ''ExternalDocs
@@ -58,28 +58,28 @@ makePrisms ''SecuritySchemeType
 -- ** 'Referenced' prisms
 makePrisms ''Referenced
 
--- ** 'SwaggerItems' prisms
+-- ** 'OpenAPIItems' prisms
 
-_SwaggerItemsArray :: Review (SwaggerItems 'SwaggerKindSchema) [Referenced Schema]
-_SwaggerItemsArray
-  = unto (\x -> SwaggerItemsArray x)
+_openAPIItemsArray :: Review (OpenAPIItems 'OpenAPIKindSchema) [Referenced Schema]
+_openAPIItemsArray
+  = unto (\x -> OpenAPIItemsArray x)
 {- \x -> case x of
-      SwaggerItemsPrimitive c p -> Left (SwaggerItemsPrimitive c p)
-      SwaggerItemsObject o      -> Left (SwaggerItemsObject o)
-      SwaggerItemsArray a       -> Right a
+      OpenAPIItemsPrimitive c p -> Left (OpenAPIItemsPrimitive c p)
+      OpenAPIItemsObject o      -> Left (OpenAPIItemsObject o)
+      OpenAPIItemsArray a       -> Right a
 -}
 
-_SwaggerItemsObject :: Review (SwaggerItems 'SwaggerKindSchema) (Referenced Schema)
-_SwaggerItemsObject
-  = unto (\x -> SwaggerItemsObject x)
+_openAPIItemsObject :: Review (OpenAPIItems 'OpenAPIKindSchema) (Referenced Schema)
+_openAPIItemsObject
+  = unto (\x -> OpenAPIItemsObject x)
 {- \x -> case x of
-      SwaggerItemsPrimitive c p -> Left (SwaggerItemsPrimitive c p)
-      SwaggerItemsObject o      -> Right o
-      SwaggerItemsArray a       -> Left (SwaggerItemsArray a)
+      OpenAPIItemsPrimitive c p -> Left (OpenAPIItemsPrimitive c p)
+      OpenAPIItemsObject o      -> Right o
+      OpenAPIItemsArray a       -> Left (OpenAPIItemsArray a)
 -}
 
-_SwaggerItemsPrimitive :: forall t p f. (Profunctor p, Bifunctor p, Functor f) => Optic' p f (SwaggerItems t) (Maybe (CollectionFormat t), ParamSchema t)
-_SwaggerItemsPrimitive = unto (\(c, p) -> SwaggerItemsPrimitive c p)
+_openAPIItemsPrimitive :: forall t p f. (Profunctor p, Bifunctor p, Functor f) => Optic' p f (OpenAPIItems t) (Maybe (CollectionFormat t), ParamSchema t)
+_openAPIItemsPrimitive = unto (\(c, p) -> OpenAPIItemsPrimitive c p)
 
 -- =============================================================
 -- More helpful instances for easier access to schema properties
@@ -96,13 +96,13 @@ instance At   Responses where at n = responses . at n
 instance Ixed Operation where ix n = responses . ix n
 instance At   Operation where at n = responses . at n
 
-instance HasParamSchema NamedSchema (ParamSchema 'SwaggerKindSchema) where paramSchema = schema.paramSchema
+instance HasParamSchema NamedSchema (ParamSchema 'OpenAPIKindSchema) where paramSchema = schema.paramSchema
 
 -- HasType instances
-instance HasType Header (SwaggerType ('SwaggerKindNormal Header)) where type_ = paramSchema.type_
-instance HasType Schema (SwaggerType 'SwaggerKindSchema) where type_ = paramSchema.type_
-instance HasType NamedSchema (SwaggerType 'SwaggerKindSchema) where type_ = paramSchema.type_
-instance HasType ParamOtherSchema (SwaggerType 'SwaggerKindParamOtherSchema) where type_ = paramSchema.type_
+instance HasType Header (OpenAPIType ('OpenAPIKindNormal Header)) where type_ = paramSchema.type_
+instance HasType Schema (OpenAPIType 'OpenAPIKindSchema) where type_ = paramSchema.type_
+instance HasType NamedSchema (OpenAPIType 'OpenAPIKindSchema) where type_ = paramSchema.type_
+instance HasType ParamOtherSchema (OpenAPIType 'OpenAPIKindParamOtherSchema) where type_ = paramSchema.type_
 
 -- HasDefault instances
 instance HasDefault Header (Maybe Value) where default_ = paramSchema.default_
@@ -124,7 +124,7 @@ instance
   OVERLAPPABLE_
 #endif
   HasParamSchema s (ParamSchema t)
-  => HasItems s (Maybe (SwaggerItems t)) where
+  => HasItems s (Maybe (OpenAPIItems t)) where
   items = paramSchema.items
 
 instance

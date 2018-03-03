@@ -19,7 +19,7 @@
 {-# LANGUAGE PolyKinds #-}
 #endif
 #include "overlapping-compat.h"
-module Data.Swagger.Internal where
+module Data.OpenAPI.Internal where
 
 import Prelude ()
 import Prelude.Compat
@@ -47,19 +47,19 @@ import           Data.HashMap.Strict.InsOrd (InsOrdHashMap)
 import qualified Data.HashMap.Strict.InsOrd as InsOrdHashMap
 
 import Generics.SOP.TH                  (deriveGeneric)
-import Data.Swagger.Internal.AesonUtils (sopSwaggerGenericToJSON
-                                        ,sopSwaggerGenericToJSONWithOpts
-                                        ,sopSwaggerGenericParseJSON
-                                        ,HasSwaggerAesonOptions(..)
+import Data.OpenAPI.Internal.AesonUtils (sopOpenAPIGenericToJSON
+                                        ,sopOpenAPIGenericToJSONWithOpts
+                                        ,sopOpenAPIGenericParseJSON
+                                        ,HasOpenAPIAesonOptions(..)
                                         ,AesonDefaultValue(..)
-                                        ,mkSwaggerAesonOptions
+                                        ,mkOpenAPIAesonOptions
                                         ,saoAdditionalPairs
                                         ,saoSubObject)
-import Data.Swagger.Internal.Utils
+import Data.OpenAPI.Internal.Utils
 
 #if MIN_VERSION_aeson(0,10,0)
-import Data.Swagger.Internal.AesonUtils (sopSwaggerGenericToEncoding)
-#define DEFINE_TOENCODING toEncoding = sopSwaggerGenericToEncoding
+import Data.OpenAPI.Internal.AesonUtils (sopOpenAPIGenericToEncoding)
+#define DEFINE_TOENCODING toEncoding = sopOpenAPIGenericToEncoding
 #else
 #define DEFINE_TOENCODING
 #endif
@@ -68,71 +68,71 @@ import Data.Swagger.Internal.AesonUtils (sopSwaggerGenericToEncoding)
 type Definitions = InsOrdHashMap Text
 
 -- | This is the root document object for the API specification.
-data Swagger = Swagger
+data OpenAPI = OpenAPI
   { -- | Provides metadata about the API.
     -- The metadata can be used by the clients if needed.
-    _swaggerInfo :: Info
+    _openAPIInfo :: Info
 
     -- | The host (name or ip) serving the API. It MAY include a port.
     -- If the host is not included, the host serving the documentation is to be used (including the port).
-  , _swaggerHost :: Maybe Host
+  , _openAPIHost :: Maybe Host
 
     -- | The base path on which the API is served, which is relative to the host.
     -- If it is not included, the API is served directly under the host.
     -- The value MUST start with a leading slash (/).
-  , _swaggerBasePath :: Maybe FilePath
+  , _openAPIBasePath :: Maybe FilePath
 
     -- | The transfer protocol of the API.
-    -- If the schemes is not included, the default scheme to be used is the one used to access the Swagger definition itself.
-  , _swaggerSchemes :: Maybe [Scheme]
+    -- If the schemes is not included, the default scheme to be used is the one used to access the OpenAPI definition itself.
+  , _openAPISchemes :: Maybe [Scheme]
 
     -- | A list of MIME types the APIs can consume.
     -- This is global to all APIs but can be overridden on specific API calls.
-  , _swaggerConsumes :: MimeList
+  , _openAPIConsumes :: MimeList
 
     -- | A list of MIME types the APIs can produce.
     -- This is global to all APIs but can be overridden on specific API calls.
-  , _swaggerProduces :: MimeList
+  , _openAPIProduces :: MimeList
 
     -- | The available paths and operations for the API.
     -- Holds the relative paths to the individual endpoints.
     -- The path is appended to the @'basePath'@ in order to construct the full URL.
-  , _swaggerPaths :: InsOrdHashMap FilePath PathItem
+  , _openAPIPaths :: InsOrdHashMap FilePath PathItem
 
     -- | An object to hold data types produced and consumed by operations.
-  , _swaggerDefinitions :: Definitions Schema
+  , _openAPIDefinitions :: Definitions Schema
 
     -- | An object to hold parameters that can be used across operations.
     -- This property does not define global parameters for all operations.
-  , _swaggerParameters :: Definitions Param
+  , _openAPIParameters :: Definitions Param
 
     -- | An object to hold responses that can be used across operations.
     -- This property does not define global responses for all operations.
-  , _swaggerResponses :: Definitions Response
+  , _openAPIResponses :: Definitions Response
 
     -- | Security scheme definitions that can be used across the specification.
-  , _swaggerSecurityDefinitions :: Definitions SecurityScheme
+  , _openAPISecurityDefinitions :: Definitions SecurityScheme
 
     -- | A declaration of which security schemes are applied for the API as a whole.
     -- The list of values describes alternative security schemes that can be used
     -- (that is, there is a logical OR between the security requirements).
     -- Individual operations can override this definition.
-  , _swaggerSecurity :: [SecurityRequirement]
+  , _openAPISecurity :: [SecurityRequirement]
 
     -- | A list of tags used by the specification with additional metadata.
     -- The order of the tags can be used to reflect on their order by the parsing tools.
     -- Not all tags that are used by the Operation Object must be declared.
     -- The tags that are not declared may be organized randomly or based on the tools' logic.
     -- Each tag name in the list MUST be unique.
-  , _swaggerTags :: Set Tag
+  , _openAPITags :: Set Tag
 
     -- | Additional external documentation.
-  , _swaggerExternalDocs :: Maybe ExternalDocs
+  , _openAPIExternalDocs :: Maybe ExternalDocs
   } deriving (Eq, Show, Generic, Data, Typeable)
 
 -- | The object provides metadata about the API.
 -- The metadata can be used by the clients if needed,
--- and can be presented in the Swagger-UI for convenience.
+-- and can be presented in the OpenAPI-UI for convenience.
 data Info = Info
   { -- | The title of the application.
     _infoTitle :: Text
@@ -192,7 +192,7 @@ hostConstr :: Constr
 hostConstr = mkConstr hostDataType "Host" [] Prefix
 
 hostDataType :: DataType
-hostDataType = mkDataType "Data.Swagger.Host" [hostConstr]
+hostDataType = mkDataType "Data.OpenAPI.Host" [hostConstr]
 
 instance Data Host where
   gunfold k z c = case constrIndex c of
@@ -249,7 +249,7 @@ data Operation = Operation
     _operationTags :: Set TagName
 
     -- | A short summary of what the operation does.
-    -- For maximum readability in the swagger-ui, this field SHOULD be less than 120 characters.
+    -- For maximum readability in the openapi-ui, this field SHOULD be less than 120 characters.
   , _operationSummary :: Maybe Text
 
     -- | A verbose explanation of the operation behavior.
@@ -309,7 +309,7 @@ mimeListConstr :: Constr
 mimeListConstr = mkConstr mimeListDataType "MimeList" ["getMimeList"] Prefix
 
 mimeListDataType :: DataType
-mimeListDataType = mkDataType "Data.Swagger.MimeList" [mimeListConstr]
+mimeListDataType = mkDataType "Data.OpenAPI.MimeList" [mimeListConstr]
 
 instance Data MimeList where
   gunfold k z c = case constrIndex c of
@@ -354,140 +354,140 @@ data ParamOtherSchema = ParamOtherSchema
     -- Default value is @False@.
   , _paramOtherSchemaAllowEmptyValue :: Maybe Bool
 
-  , _paramOtherSchemaParamSchema :: ParamSchema 'SwaggerKindParamOtherSchema
+  , _paramOtherSchemaParamSchema :: ParamSchema 'OpenAPIKindParamOtherSchema
   } deriving (Eq, Show, Generic, Typeable, Data)
 
--- | Items for @'SwaggerArray'@ schemas.
+-- | Items for @'OpenAPIArray'@ schemas.
 --
--- @'SwaggerItemsPrimitive'@ should be used only for query params, headers and path pieces.
+-- @'OpenAPIItemsPrimitive'@ should be used only for query params, headers and path pieces.
 -- The @'CollectionFormat' t@ parameter specifies how elements of an array should be displayed.
--- Note that @fmt@ in @'SwaggerItemsPrimitive' fmt schema@ specifies format for elements of type @schema@.
--- This is different from the original Swagger's <http://swagger.io/specification/#itemsObject Items Object>.
+-- Note that @fmt@ in @'OpenAPIItemsPrimitive' fmt schema@ specifies format for elements of type @schema@.
+-- This is different from the original OpenAPI's <http://openapi.io/specification/#itemsObject Items Object>.
 --
--- @'SwaggerItemsObject'@ should be used to specify homogenous array @'Schema'@s.
+-- @'OpenAPIItemsObject'@ should be used to specify homogenous array @'Schema'@s.
 --
--- @'SwaggerItemsArray'@ should be used to specify tuple @'Schema'@s.
-data SwaggerItems t where
-  SwaggerItemsPrimitive :: Maybe (CollectionFormat k) -> ParamSchema k-> SwaggerItems k
-  SwaggerItemsObject    :: Referenced Schema   -> SwaggerItems 'SwaggerKindSchema
-  SwaggerItemsArray     :: [Referenced Schema] -> SwaggerItems 'SwaggerKindSchema
+-- @'OpenAPIItemsArray'@ should be used to specify tuple @'Schema'@s.
+data OpenAPIItems t where
+  OpenAPIItemsPrimitive :: Maybe (CollectionFormat k) -> ParamSchema k-> OpenAPIItems k
+  OpenAPIItemsObject    :: Referenced Schema   -> OpenAPIItems 'OpenAPIKindSchema
+  OpenAPIItemsArray     :: [Referenced Schema] -> OpenAPIItems 'OpenAPIKindSchema
   deriving (Typeable)
 
-deriving instance Eq (SwaggerItems t)
-deriving instance Show (SwaggerItems t)
---deriving instance Typeable (SwaggerItems t)
+deriving instance Eq (OpenAPIItems t)
+deriving instance Show (OpenAPIItems t)
+--deriving instance Typeable (OpenAPIItems t)
 
-swaggerItemsPrimitiveConstr :: Constr
-swaggerItemsPrimitiveConstr = mkConstr swaggerItemsDataType "SwaggerItemsPrimitive" [] Prefix
+openapiItemsPrimitiveConstr :: Constr
+openapiItemsPrimitiveConstr = mkConstr openapiItemsDataType "OpenAPIItemsPrimitive" [] Prefix
 
-swaggerItemsObjectConstr :: Constr
-swaggerItemsObjectConstr = mkConstr swaggerItemsDataType "SwaggerItemsObject" [] Prefix
+openapiItemsObjectConstr :: Constr
+openapiItemsObjectConstr = mkConstr openapiItemsDataType "OpenAPIItemsObject" [] Prefix
 
-swaggerItemsArrayConstr :: Constr
-swaggerItemsArrayConstr = mkConstr swaggerItemsDataType "SwaggerItemsArray" [] Prefix
+openapiItemsArrayConstr :: Constr
+openapiItemsArrayConstr = mkConstr openapiItemsDataType "OpenAPIItemsArray" [] Prefix
 
-swaggerItemsDataType :: DataType
-swaggerItemsDataType = mkDataType "Data.Swagger.SwaggerItems" [swaggerItemsPrimitiveConstr]
+openapiItemsDataType :: DataType
+openapiItemsDataType = mkDataType "Data.OpenAPI.OpenAPIItems" [openapiItemsPrimitiveConstr]
 
 -- Note: unfortunately we have to write these Data instances by hand,
 -- to get better contexts / avoid duplicate name when using standalone deriving
 
-instance Data t => Data (SwaggerItems ('SwaggerKindNormal t)) where
+instance Data t => Data (OpenAPIItems ('OpenAPIKindNormal t)) where
   -- TODO: define gfoldl
   gunfold k z c = case constrIndex c of
-    1 -> k (k (z SwaggerItemsPrimitive))
-    _ -> error $ "Data.Data.gunfold: Constructor " ++ show c ++ " is not of type (SwaggerItems t)."
-  toConstr _ = swaggerItemsPrimitiveConstr
-  dataTypeOf _ = swaggerItemsDataType
+    1 -> k (k (z OpenAPIItemsPrimitive))
+    _ -> error $ "Data.Data.gunfold: Constructor " ++ show c ++ " is not of type (OpenAPIItems t)."
+  toConstr _ = openapiItemsPrimitiveConstr
+  dataTypeOf _ = openapiItemsDataType
 
--- SwaggerItems SwaggerKindParamOtherSchema can be constructed using SwaggerItemsPrimitive only
-instance Data (SwaggerItems 'SwaggerKindParamOtherSchema) where
+-- OpenAPIItems OpenAPIKindParamOtherSchema can be constructed using OpenAPIItemsPrimitive only
+instance Data (OpenAPIItems 'OpenAPIKindParamOtherSchema) where
   -- TODO: define gfoldl
   gunfold k z c = case constrIndex c of
-    1 -> k (k (z SwaggerItemsPrimitive))
-    _ -> error $ "Data.Data.gunfold: Constructor " ++ show c ++ " is not of type (SwaggerItems SwaggerKindParamOtherSchema)."
-  toConstr _ = swaggerItemsPrimitiveConstr
-  dataTypeOf _ = swaggerItemsDataType
+    1 -> k (k (z OpenAPIItemsPrimitive))
+    _ -> error $ "Data.Data.gunfold: Constructor " ++ show c ++ " is not of type (OpenAPIItems OpenAPIKindParamOtherSchema)."
+  toConstr _ = openapiItemsPrimitiveConstr
+  dataTypeOf _ = openapiItemsDataType
 
-instance Data (SwaggerItems 'SwaggerKindSchema) where
-  gfoldl _ _ (SwaggerItemsPrimitive _ _) = error $ " Data.Data.gfoldl: Constructor SwaggerItemsPrimitive used to construct SwaggerItems SwaggerKindSchema"
-  gfoldl k z (SwaggerItemsObject ref)    = z SwaggerItemsObject `k` ref
-  gfoldl k z (SwaggerItemsArray ref)     = z SwaggerItemsArray `k` ref
+instance Data (OpenAPIItems 'OpenAPIKindSchema) where
+  gfoldl _ _ (OpenAPIItemsPrimitive _ _) = error $ " Data.Data.gfoldl: Constructor OpenAPIItemsPrimitive used to construct OpenAPIItems OpenAPIKindSchema"
+  gfoldl k z (OpenAPIItemsObject ref)    = z OpenAPIItemsObject `k` ref
+  gfoldl k z (OpenAPIItemsArray ref)     = z OpenAPIItemsArray `k` ref
 
   gunfold k z c = case constrIndex c of
-    2 -> k (z SwaggerItemsObject)
-    3 -> k (z SwaggerItemsArray)
-    _ -> error $ "Data.Data.gunfold: Constructor " ++ show c ++ " is not of type (SwaggerItems SwaggerKindSchema)."
+    2 -> k (z OpenAPIItemsObject)
+    3 -> k (z OpenAPIItemsArray)
+    _ -> error $ "Data.Data.gunfold: Constructor " ++ show c ++ " is not of type (OpenAPIItems OpenAPIKindSchema)."
 
-  toConstr (SwaggerItemsPrimitive _ _) = error "Not supported"
-  toConstr (SwaggerItemsObject _)      = swaggerItemsObjectConstr
-  toConstr (SwaggerItemsArray _)       = swaggerItemsArrayConstr
+  toConstr (OpenAPIItemsPrimitive _ _) = error "Not supported"
+  toConstr (OpenAPIItemsObject _)      = openapiItemsObjectConstr
+  toConstr (OpenAPIItemsArray _)       = openapiItemsArrayConstr
 
-  dataTypeOf _ = swaggerItemsDataType
+  dataTypeOf _ = openapiItemsDataType
 
 -- | Type used as a kind to avoid overlapping instances.
-data SwaggerKind t
-    = SwaggerKindNormal t
-    | SwaggerKindParamOtherSchema
-    | SwaggerKindSchema
+data OpenAPIKind t
+    = OpenAPIKindNormal t
+    | OpenAPIKindParamOtherSchema
+    | OpenAPIKindSchema
     deriving (Typeable)
 
-deriving instance Typeable 'SwaggerKindNormal
-deriving instance Typeable 'SwaggerKindParamOtherSchema
-deriving instance Typeable 'SwaggerKindSchema
+deriving instance Typeable 'OpenAPIKindNormal
+deriving instance Typeable 'OpenAPIKindParamOtherSchema
+deriving instance Typeable 'OpenAPIKindSchema
 
-type family SwaggerKindType (k :: SwaggerKind *) :: *
-type instance SwaggerKindType ('SwaggerKindNormal t) = t
-type instance SwaggerKindType 'SwaggerKindSchema = Schema
-type instance SwaggerKindType 'SwaggerKindParamOtherSchema = ParamOtherSchema
+type family OpenAPIKindType (k :: OpenAPIKind *) :: *
+type instance OpenAPIKindType ('OpenAPIKindNormal t) = t
+type instance OpenAPIKindType 'OpenAPIKindSchema = Schema
+type instance OpenAPIKindType 'OpenAPIKindParamOtherSchema = ParamOtherSchema
 
-data SwaggerType t where
-  SwaggerString   :: SwaggerType t
-  SwaggerNumber   :: SwaggerType t
-  SwaggerInteger  :: SwaggerType t
-  SwaggerBoolean  :: SwaggerType t
-  SwaggerArray    :: SwaggerType t
-  SwaggerFile     :: SwaggerType 'SwaggerKindParamOtherSchema
-  SwaggerNull     :: SwaggerType 'SwaggerKindSchema
-  SwaggerObject   :: SwaggerType 'SwaggerKindSchema
+data OpenAPIType t where
+  OpenAPIString   :: OpenAPIType t
+  OpenAPINumber   :: OpenAPIType t
+  OpenAPIInteger  :: OpenAPIType t
+  OpenAPIBoolean  :: OpenAPIType t
+  OpenAPIArray    :: OpenAPIType t
+  OpenAPIFile     :: OpenAPIType 'OpenAPIKindParamOtherSchema
+  OpenAPINull     :: OpenAPIType 'OpenAPIKindSchema
+  OpenAPIObject   :: OpenAPIType 'OpenAPIKindSchema
   deriving (Typeable)
 
-deriving instance Eq (SwaggerType t)
-deriving instance Show (SwaggerType t)
+deriving instance Eq (OpenAPIType t)
+deriving instance Show (OpenAPIType t)
 
-swaggerTypeConstr :: Data (SwaggerType t) => SwaggerType t -> Constr
-swaggerTypeConstr t = mkConstr (dataTypeOf t) (show t) [] Prefix
+openapiTypeConstr :: Data (OpenAPIType t) => OpenAPIType t -> Constr
+openapiTypeConstr t = mkConstr (dataTypeOf t) (show t) [] Prefix
 
-swaggerTypeDataType :: {- Data (SwaggerType t) => -} SwaggerType t -> DataType
-swaggerTypeDataType _ = mkDataType "Data.Swagger.SwaggerType" swaggerTypeConstrs
+openapiTypeDataType :: {- Data (OpenAPIType t) => -} OpenAPIType t -> DataType
+openapiTypeDataType _ = mkDataType "Data.OpenAPI.OpenAPIType" openapiTypeConstrs
 
-swaggerCommonTypes :: [SwaggerType k]
-swaggerCommonTypes = [SwaggerString, SwaggerNumber, SwaggerInteger, SwaggerBoolean, SwaggerArray]
+openapiCommonTypes :: [OpenAPIType k]
+openapiCommonTypes = [OpenAPIString, OpenAPINumber, OpenAPIInteger, OpenAPIBoolean, OpenAPIArray]
 
-swaggerParamTypes :: [SwaggerType 'SwaggerKindParamOtherSchema]
-swaggerParamTypes = swaggerCommonTypes ++ [SwaggerFile]
+openapiParamTypes :: [OpenAPIType 'OpenAPIKindParamOtherSchema]
+openapiParamTypes = openapiCommonTypes ++ [OpenAPIFile]
 
-swaggerSchemaTypes :: [SwaggerType 'SwaggerKindSchema]
-swaggerSchemaTypes = swaggerCommonTypes ++ [error "SwaggerFile is invalid SwaggerType Schema", SwaggerNull, SwaggerObject]
+openapiSchemaTypes :: [OpenAPIType 'OpenAPIKindSchema]
+openapiSchemaTypes = openapiCommonTypes ++ [error "OpenAPIFile is invalid OpenAPIType Schema", OpenAPINull, OpenAPIObject]
 
-swaggerTypeConstrs :: [Constr]
-swaggerTypeConstrs = map swaggerTypeConstr (swaggerCommonTypes :: [SwaggerType 'SwaggerKindSchema])
-  ++ [swaggerTypeConstr SwaggerFile, swaggerTypeConstr SwaggerNull, swaggerTypeConstr SwaggerObject]
+openapiTypeConstrs :: [Constr]
+openapiTypeConstrs = map openapiTypeConstr (openapiCommonTypes :: [OpenAPIType 'OpenAPIKindSchema])
+  ++ [openapiTypeConstr OpenAPIFile, openapiTypeConstr OpenAPINull, openapiTypeConstr OpenAPIObject]
 
-instance Typeable t => Data (SwaggerType ('SwaggerKindNormal t)) where
-  gunfold = gunfoldEnum "SwaggerType" swaggerCommonTypes
-  toConstr = swaggerTypeConstr
-  dataTypeOf = swaggerTypeDataType
+instance Typeable t => Data (OpenAPIType ('OpenAPIKindNormal t)) where
+  gunfold = gunfoldEnum "OpenAPIType" openapiCommonTypes
+  toConstr = openapiTypeConstr
+  dataTypeOf = openapiTypeDataType
 
-instance Data (SwaggerType 'SwaggerKindParamOtherSchema) where
-  gunfold = gunfoldEnum "SwaggerType ParamOtherSchema" swaggerParamTypes
-  toConstr = swaggerTypeConstr
-  dataTypeOf = swaggerTypeDataType
+instance Data (OpenAPIType 'OpenAPIKindParamOtherSchema) where
+  gunfold = gunfoldEnum "OpenAPIType ParamOtherSchema" openapiParamTypes
+  toConstr = openapiTypeConstr
+  dataTypeOf = openapiTypeDataType
 
-instance Data (SwaggerType 'SwaggerKindSchema) where
-  gunfold = gunfoldEnum "SwaggerType Schema" swaggerSchemaTypes
-  toConstr = swaggerTypeConstr
-  dataTypeOf = swaggerTypeDataType
+instance Data (OpenAPIType 'OpenAPIKindSchema) where
+  gunfold = gunfoldEnum "OpenAPIType Schema" openapiSchemaTypes
+  toConstr = openapiTypeConstr
+  dataTypeOf = openapiTypeDataType
 
 data ParamLocation
   = -- | Parameters that are appended to the URL.
@@ -501,7 +501,7 @@ data ParamLocation
   | ParamPath
     -- | Used to describe the payload of an HTTP request when either @application/x-www-form-urlencoded@
     -- or @multipart/form-data@ are used as the content type of the request
-    -- (in Swagger's definition, the @consumes@ property of an operation).
+    -- (in OpenAPI's definition, the @consumes@ property of an operation).
     -- This is the only parameter type that can be used to send files, thus supporting the @'ParamFile'@ type.
     -- Since form parameters are sent in the payload, they cannot be declared together with a body parameter for the same operation.
     -- Form parameters have a different format based on the content-type used
@@ -524,7 +524,7 @@ data CollectionFormat t where
   -- Corresponds to multiple parameter instances
   -- instead of multiple values for a single instance @foo=bar&foo=baz@.
   -- This is valid only for parameters in @'ParamQuery'@ or @'ParamFormData'@.
-  CollectionMulti :: CollectionFormat 'SwaggerKindParamOtherSchema
+  CollectionMulti :: CollectionFormat 'OpenAPIKindParamOtherSchema
   deriving (Typeable)
 
 deriving instance Eq (CollectionFormat t)
@@ -534,18 +534,18 @@ collectionFormatConstr :: CollectionFormat t -> Constr
 collectionFormatConstr cf = mkConstr collectionFormatDataType (show cf) [] Prefix
 
 collectionFormatDataType :: DataType
-collectionFormatDataType = mkDataType "Data.Swagger.CollectionFormat" $
+collectionFormatDataType = mkDataType "Data.OpenAPI.CollectionFormat" $
   map collectionFormatConstr collectionCommonFormats
 
 collectionCommonFormats :: [CollectionFormat t]
 collectionCommonFormats = [ CollectionCSV, CollectionSSV, CollectionTSV, CollectionPipes ]
 
-instance Data t => Data (CollectionFormat ('SwaggerKindNormal t)) where
+instance Data t => Data (CollectionFormat ('OpenAPIKindNormal t)) where
   gunfold = gunfoldEnum "CollectionFormat" collectionCommonFormats
   toConstr = collectionFormatConstr
   dataTypeOf _ = collectionFormatDataType
 
-deriving instance Data (CollectionFormat 'SwaggerKindParamOtherSchema)
+deriving instance Data (CollectionFormat 'OpenAPIKindParamOtherSchema)
 
 type ParamName = Text
 
@@ -567,7 +567,7 @@ data Schema = Schema
   , _schemaMaxProperties :: Maybe Integer
   , _schemaMinProperties :: Maybe Integer
 
-  , _schemaParamSchema :: ParamSchema 'SwaggerKindSchema
+  , _schemaParamSchema :: ParamSchema 'OpenAPIKindSchema
   } deriving (Eq, Show, Generic, Data, Typeable)
 
 -- | A @'Schema'@ with an optional name.
@@ -580,7 +580,7 @@ data NamedSchema = NamedSchema
 -- | Regex pattern for @string@ type.
 type Pattern = Text
 
-data ParamSchema (t :: SwaggerKind *) = ParamSchema
+data ParamSchema (t :: OpenAPIKind *) = ParamSchema
   { -- | Declares the value of the parameter that the server will use if none is provided,
     -- for example a @"count"@ to control the number of results per page might default to @100@
     -- if not supplied by the client in the request.
@@ -588,9 +588,9 @@ data ParamSchema (t :: SwaggerKind *) = ParamSchema
     -- Unlike JSON Schema this value MUST conform to the defined type for this parameter.
     _paramSchemaDefault :: Maybe Value
 
-  , _paramSchemaType :: SwaggerType t
+  , _paramSchemaType :: OpenAPIType t
   , _paramSchemaFormat :: Maybe Format
-  , _paramSchemaItems :: Maybe (SwaggerItems t)
+  , _paramSchemaItems :: Maybe (OpenAPIItems t)
   , _paramSchemaMaximum :: Maybe Scientific
   , _paramSchemaExclusiveMaximum :: Maybe Bool
   , _paramSchemaMinimum :: Maybe Scientific
@@ -605,11 +605,11 @@ data ParamSchema (t :: SwaggerKind *) = ParamSchema
   , _paramSchemaMultipleOf :: Maybe Scientific
   } deriving (Eq, Show, Generic, Typeable)
 
-deriving instance (Typeable k, Data (SwaggerType k), Data (SwaggerItems k)) => Data (ParamSchema k)
+deriving instance (Typeable k, Data (OpenAPIType k), Data (OpenAPIItems k)) => Data (ParamSchema k)
 
 data Xml = Xml
   { -- | Replaces the name of the element/attribute used for the described schema property.
-    -- When defined within the @'SwaggerItems'@ (items), it will affect the name of the individual XML elements within the list.
+    -- When defined within the @'OpenAPIItems'@ (items), it will affect the name of the individual XML elements within the list.
     -- When defined alongside type being array (outside the items),
     -- it will affect the wrapping element and only if wrapped is true.
     -- If wrapped is false, it will be ignored.
@@ -681,7 +681,7 @@ data Header = Header
   { -- | A short description of the header.
     _headerDescription :: Maybe Text
 
-  , _headerParamSchema :: ParamSchema ('SwaggerKindNormal Header)
+  , _headerParamSchema :: ParamSchema ('OpenAPIKindNormal Header)
   } deriving (Eq, Show, Generic, Data, Typeable)
 
 data Example = Example { getExample :: Map MediaType Value }
@@ -691,7 +691,7 @@ exampleConstr :: Constr
 exampleConstr = mkConstr exampleDataType "Example" ["getExample"] Prefix
 
 exampleDataType :: DataType
-exampleDataType = mkDataType "Data.Swagger.Example" [exampleConstr]
+exampleDataType = mkDataType "Data.OpenAPI.Example" [exampleConstr]
 
 instance Data Example where
   gunfold k z c = case constrIndex c of
@@ -805,7 +805,7 @@ newtype URL = URL { getUrl :: Text } deriving (Eq, Ord, Show, ToJSON, FromJSON, 
 -- Monoid instances
 -- =======================================================================
 
-instance Monoid Swagger where
+instance Monoid OpenAPI where
   mempty = genericMempty
   mappend = genericMappend
 
@@ -862,45 +862,45 @@ instance Monoid Example where
   mappend = genericMappend
 
 -- =======================================================================
--- SwaggerMonoid helper instances
+-- OpenAPIMonoid helper instances
 -- =======================================================================
 
-instance SwaggerMonoid Info
-instance SwaggerMonoid PathItem
-instance SwaggerMonoid Schema
-instance SwaggerMonoid (ParamSchema t)
-instance SwaggerMonoid Param
-instance SwaggerMonoid ParamOtherSchema
-instance SwaggerMonoid Responses
-instance SwaggerMonoid Response
-instance SwaggerMonoid ExternalDocs
-instance SwaggerMonoid Operation
+instance OpenAPIMonoid Info
+instance OpenAPIMonoid PathItem
+instance OpenAPIMonoid Schema
+instance OpenAPIMonoid (ParamSchema t)
+instance OpenAPIMonoid Param
+instance OpenAPIMonoid ParamOtherSchema
+instance OpenAPIMonoid Responses
+instance OpenAPIMonoid Response
+instance OpenAPIMonoid ExternalDocs
+instance OpenAPIMonoid Operation
 
-instance SwaggerMonoid MimeList
-deriving instance SwaggerMonoid URL
+instance OpenAPIMonoid MimeList
+deriving instance OpenAPIMonoid URL
 
-instance SwaggerMonoid (SwaggerType t) where
-  swaggerMempty = SwaggerString
-  swaggerMappend _ y = y
+instance OpenAPIMonoid (OpenAPIType t) where
+  openapiMempty = OpenAPIString
+  openapiMappend _ y = y
 
-instance SwaggerMonoid ParamLocation where
-  swaggerMempty = ParamQuery
-  swaggerMappend _ y = y
+instance OpenAPIMonoid ParamLocation where
+  openapiMempty = ParamQuery
+  openapiMappend _ y = y
 
-instance OVERLAPPING_ SwaggerMonoid (InsOrdHashMap FilePath PathItem) where
-  swaggerMempty = InsOrdHashMap.empty
-  swaggerMappend = InsOrdHashMap.unionWith mappend
+instance OVERLAPPING_ OpenAPIMonoid (InsOrdHashMap FilePath PathItem) where
+  openapiMempty = InsOrdHashMap.empty
+  openapiMappend = InsOrdHashMap.unionWith mappend
 
-instance Monoid a => SwaggerMonoid (Referenced a) where
-  swaggerMempty = Inline mempty
-  swaggerMappend (Inline x) (Inline y) = Inline (x <> y)
-  swaggerMappend _ y = y
+instance Monoid a => OpenAPIMonoid (Referenced a) where
+  openapiMempty = Inline mempty
+  openapiMappend (Inline x) (Inline y) = Inline (x <> y)
+  openapiMappend _ y = y
 
-instance SwaggerMonoid ParamAnySchema where
-  swaggerMempty = ParamOther swaggerMempty
-  swaggerMappend (ParamBody x) (ParamBody y) = ParamBody (swaggerMappend x y)
-  swaggerMappend (ParamOther x) (ParamOther y) = ParamOther (swaggerMappend x y)
-  swaggerMappend _ y = y
+instance OpenAPIMonoid ParamAnySchema where
+  openapiMempty = ParamOther openapiMempty
+  openapiMappend (ParamBody x) (ParamBody y) = ParamBody (openapiMappend x y)
+  openapiMappend (ParamOther x) (ParamOther y) = ParamOther (openapiMappend x y)
+  openapiMappend _ y = y
 
 -- =======================================================================
 -- Simple Generic-based ToJSON instances
@@ -987,7 +987,7 @@ instance ToJSON OAuth2Flow where
     , "tokenUrl"         .= tokenUrl ]
 
 instance ToJSON OAuth2Params where
-  toJSON = sopSwaggerGenericToJSON
+  toJSON = sopOpenAPIGenericToJSON
   DEFINE_TOENCODING
 
 instance ToJSON SecuritySchemeType where
@@ -1000,28 +1000,28 @@ instance ToJSON SecuritySchemeType where
       = toJSON params
     <+> object [ "type" .= ("oauth2" :: Text) ]
 
-instance ToJSON Swagger where
-  toJSON = sopSwaggerGenericToJSON
+instance ToJSON OpenAPI where
+  toJSON = sopOpenAPIGenericToJSON
   DEFINE_TOENCODING
 
 instance ToJSON SecurityScheme where
-  toJSON = sopSwaggerGenericToJSON
+  toJSON = sopOpenAPIGenericToJSON
   DEFINE_TOENCODING
 
 instance ToJSON Schema where
-  toJSON = sopSwaggerGenericToJSON
+  toJSON = sopOpenAPIGenericToJSON
   DEFINE_TOENCODING
 
 instance ToJSON Header where
-  toJSON = sopSwaggerGenericToJSON
+  toJSON = sopOpenAPIGenericToJSON
   DEFINE_TOENCODING
 
-instance ToJSON (ParamSchema t) => ToJSON (SwaggerItems t) where
-  toJSON (SwaggerItemsPrimitive fmt schema) = object
+instance ToJSON (ParamSchema t) => ToJSON (OpenAPIItems t) where
+  toJSON (OpenAPIItemsPrimitive fmt schema) = object
     [ "collectionFormat" .= fmt
     , "items"            .= schema ]
-  toJSON (SwaggerItemsObject x) = object [ "items" .= x ]
-  toJSON (SwaggerItemsArray  x) = object [ "items" .= x ]
+  toJSON (OpenAPIItemsObject x) = object [ "items" .= x ]
+  toJSON (OpenAPIItemsArray  x) = object [ "items" .= x ]
 
 instance ToJSON Host where
   toJSON (Host host mport) = toJSON $
@@ -1033,7 +1033,7 @@ instance ToJSON MimeList where
   toJSON (MimeList xs) = toJSON (map show xs)
 
 instance ToJSON Param where
-  toJSON = sopSwaggerGenericToJSON
+  toJSON = sopOpenAPIGenericToJSON
   DEFINE_TOENCODING
 
 instance ToJSON ParamAnySchema where
@@ -1041,23 +1041,23 @@ instance ToJSON ParamAnySchema where
   toJSON (ParamOther s) = toJSON s
 
 instance ToJSON ParamOtherSchema where
-  toJSON = sopSwaggerGenericToJSON
+  toJSON = sopOpenAPIGenericToJSON
   DEFINE_TOENCODING
 
 instance ToJSON Responses where
-  toJSON = sopSwaggerGenericToJSON
+  toJSON = sopOpenAPIGenericToJSON
   DEFINE_TOENCODING
 
 instance ToJSON Response where
-  toJSON = sopSwaggerGenericToJSON
+  toJSON = sopOpenAPIGenericToJSON
   DEFINE_TOENCODING
 
 instance ToJSON Operation where
-  toJSON = sopSwaggerGenericToJSON
+  toJSON = sopOpenAPIGenericToJSON
   DEFINE_TOENCODING
 
 instance ToJSON PathItem where
-  toJSON = sopSwaggerGenericToJSON
+  toJSON = sopOpenAPIGenericToJSON
   DEFINE_TOENCODING
 
 instance ToJSON Example where
@@ -1074,15 +1074,15 @@ instance ToJSON (Referenced Schema)   where toJSON = referencedToJSON "#/definit
 instance ToJSON (Referenced Param)    where toJSON = referencedToJSON "#/parameters/"
 instance ToJSON (Referenced Response) where toJSON = referencedToJSON "#/responses/"
 
-instance ToJSON (SwaggerType t) where
-  toJSON SwaggerArray   = "array"
-  toJSON SwaggerString  = "string"
-  toJSON SwaggerInteger = "integer"
-  toJSON SwaggerNumber  = "number"
-  toJSON SwaggerBoolean = "boolean"
-  toJSON SwaggerFile    = "file"
-  toJSON SwaggerNull    = "null"
-  toJSON SwaggerObject  = "object"
+instance ToJSON (OpenAPIType t) where
+  toJSON OpenAPIArray   = "array"
+  toJSON OpenAPIString  = "string"
+  toJSON OpenAPIInteger = "integer"
+  toJSON OpenAPINumber  = "number"
+  toJSON OpenAPIBoolean = "boolean"
+  toJSON OpenAPIFile    = "file"
+  toJSON OpenAPINull    = "null"
+  toJSON OpenAPIObject  = "object"
 
 instance ToJSON (CollectionFormat t) where
   toJSON CollectionCSV   = "csv"
@@ -1093,8 +1093,8 @@ instance ToJSON (CollectionFormat t) where
 
 instance ToJSON (ParamSchema k) where
   -- TODO: this is a bit fishy, why we need sub object only in `ToJSON`?
-  toJSON = sopSwaggerGenericToJSONWithOpts $
-      mkSwaggerAesonOptions "paramSchema" & saoSubObject ?~ "items"
+  toJSON = sopOpenAPIGenericToJSONWithOpts $
+      mkOpenAPIAesonOptions "paramSchema" & saoSubObject ?~ "items"
 
 -- =======================================================================
 -- Manual FromJSON instances
@@ -1114,7 +1114,7 @@ instance FromJSON OAuth2Flow where
   parseJSON _ = empty
 
 instance FromJSON OAuth2Params where
-  parseJSON = sopSwaggerGenericParseJSON
+  parseJSON = sopOpenAPIGenericParseJSON
 
 instance FromJSON SecuritySchemeType where
   parseJSON js@(Object o) = do
@@ -1126,31 +1126,31 @@ instance FromJSON SecuritySchemeType where
       _ -> empty
   parseJSON _ = empty
 
-instance FromJSON Swagger where
-  parseJSON = sopSwaggerGenericParseJSON
+instance FromJSON OpenAPI where
+  parseJSON = sopOpenAPIGenericParseJSON
 
 instance FromJSON SecurityScheme where
-  parseJSON = sopSwaggerGenericParseJSON
+  parseJSON = sopOpenAPIGenericParseJSON
 
 instance FromJSON Schema where
-  parseJSON = sopSwaggerGenericParseJSON
+  parseJSON = sopOpenAPIGenericParseJSON
 
 instance FromJSON Header where
-  parseJSON = sopSwaggerGenericParseJSON
+  parseJSON = sopOpenAPIGenericParseJSON
 
-instance (FromJSON (CollectionFormat ('SwaggerKindNormal t)), FromJSON (ParamSchema ('SwaggerKindNormal t))) => FromJSON (SwaggerItems ('SwaggerKindNormal t)) where
-  parseJSON = withObject "SwaggerItemsPrimitive" $ \o -> SwaggerItemsPrimitive
+instance (FromJSON (CollectionFormat ('OpenAPIKindNormal t)), FromJSON (ParamSchema ('OpenAPIKindNormal t))) => FromJSON (OpenAPIItems ('OpenAPIKindNormal t)) where
+  parseJSON = withObject "OpenAPIItemsPrimitive" $ \o -> OpenAPIItemsPrimitive
     <$> o .:? "collectionFormat"
     <*> (o .: "items" >>= parseJSON)
 
-instance FromJSON (SwaggerItems 'SwaggerKindParamOtherSchema) where
-  parseJSON = withObject "SwaggerItemsPrimitive" $ \o -> SwaggerItemsPrimitive
+instance FromJSON (OpenAPIItems 'OpenAPIKindParamOtherSchema) where
+  parseJSON = withObject "OpenAPIItemsPrimitive" $ \o -> OpenAPIItemsPrimitive
     <$> o .:? "collectionFormat"
     <*> ((o .: "items" >>= parseJSON) <|> fail ("foo" ++ show o))
 
-instance FromJSON (SwaggerItems 'SwaggerKindSchema) where
-  parseJSON js@(Object _) = SwaggerItemsObject <$> parseJSON js
-  parseJSON js@(Array _)  = SwaggerItemsArray  <$> parseJSON js
+instance FromJSON (OpenAPIItems 'OpenAPIKindSchema) where
+  parseJSON js@(Object _) = OpenAPIItemsObject <$> parseJSON js
+  parseJSON js@(Array _)  = OpenAPIItemsArray  <$> parseJSON js
   parseJSON _ = empty
 
 instance FromJSON Host where
@@ -1166,7 +1166,7 @@ instance FromJSON MimeList where
   parseJSON js = (MimeList . map fromString) <$> parseJSON js
 
 instance FromJSON Param where
-  parseJSON = sopSwaggerGenericParseJSON
+  parseJSON = sopOpenAPIGenericParseJSON
 
 instance FromJSON ParamAnySchema where
   parseJSON js@(Object o) = do
@@ -1179,7 +1179,7 @@ instance FromJSON ParamAnySchema where
   parseJSON _ = empty
 
 instance FromJSON ParamOtherSchema where
-  parseJSON = sopSwaggerGenericParseJSON
+  parseJSON = sopOpenAPIGenericParseJSON
 
 instance FromJSON Responses where
   parseJSON (Object o) = Responses
@@ -1193,13 +1193,13 @@ instance FromJSON Example where
     pure $ Example (Map.mapKeys fromString m)
 
 instance FromJSON Response where
-  parseJSON = sopSwaggerGenericParseJSON
+  parseJSON = sopOpenAPIGenericParseJSON
 
 instance FromJSON Operation where
-  parseJSON = sopSwaggerGenericParseJSON
+  parseJSON = sopOpenAPIGenericParseJSON
 
 instance FromJSON PathItem where
-  parseJSON = sopSwaggerGenericParseJSON
+  parseJSON = sopOpenAPIGenericParseJSON
 
 instance FromJSON Reference where
   parseJSON (Object o) = Reference <$> o .: "$ref"
@@ -1225,31 +1225,31 @@ instance FromJSON (Referenced Response) where parseJSON = referencedParseJSON "#
 instance FromJSON Xml where
   parseJSON = genericParseJSON (jsonPrefix "xml")
 
-instance FromJSON (SwaggerType 'SwaggerKindSchema) where
-  parseJSON = parseOneOf [SwaggerString, SwaggerInteger, SwaggerNumber, SwaggerBoolean, SwaggerArray, SwaggerNull, SwaggerObject]
+instance FromJSON (OpenAPIType 'OpenAPIKindSchema) where
+  parseJSON = parseOneOf [OpenAPIString, OpenAPIInteger, OpenAPINumber, OpenAPIBoolean, OpenAPIArray, OpenAPINull, OpenAPIObject]
 
-instance FromJSON (SwaggerType 'SwaggerKindParamOtherSchema) where
-  parseJSON = parseOneOf [SwaggerString, SwaggerInteger, SwaggerNumber, SwaggerBoolean, SwaggerArray, SwaggerFile]
+instance FromJSON (OpenAPIType 'OpenAPIKindParamOtherSchema) where
+  parseJSON = parseOneOf [OpenAPIString, OpenAPIInteger, OpenAPINumber, OpenAPIBoolean, OpenAPIArray, OpenAPIFile]
 
-instance FromJSON (SwaggerType ('SwaggerKindNormal t)) where
-  parseJSON = parseOneOf [SwaggerString, SwaggerInteger, SwaggerNumber, SwaggerBoolean, SwaggerArray]
+instance FromJSON (OpenAPIType ('OpenAPIKindNormal t)) where
+  parseJSON = parseOneOf [OpenAPIString, OpenAPIInteger, OpenAPINumber, OpenAPIBoolean, OpenAPIArray]
 
-instance FromJSON (CollectionFormat ('SwaggerKindNormal t)) where
+instance FromJSON (CollectionFormat ('OpenAPIKindNormal t)) where
   parseJSON = parseOneOf [CollectionCSV, CollectionSSV, CollectionTSV, CollectionPipes]
 
 -- NOTE: There aren't collections of 'Schema'
---instance FromJSON (CollectionFormat (SwaggerKindSchema)) where
+--instance FromJSON (CollectionFormat (OpenAPIKindSchema)) where
 --  parseJSON = parseOneOf [CollectionCSV, CollectionSSV, CollectionTSV, CollectionPipes]
 
-instance FromJSON (CollectionFormat 'SwaggerKindParamOtherSchema) where
+instance FromJSON (CollectionFormat 'OpenAPIKindParamOtherSchema) where
   parseJSON = parseOneOf [CollectionCSV, CollectionSSV, CollectionTSV, CollectionPipes, CollectionMulti]
 
-instance (FromJSON (SwaggerType ('SwaggerKindNormal t)), FromJSON (SwaggerItems ('SwaggerKindNormal t))) => FromJSON (ParamSchema ('SwaggerKindNormal t)) where
-  parseJSON = sopSwaggerGenericParseJSON
-instance FromJSON (ParamSchema 'SwaggerKindParamOtherSchema) where
-  parseJSON = sopSwaggerGenericParseJSON
-instance FromJSON (ParamSchema 'SwaggerKindSchema) where
-  parseJSON = sopSwaggerGenericParseJSON
+instance (FromJSON (OpenAPIType ('OpenAPIKindNormal t)), FromJSON (OpenAPIItems ('OpenAPIKindNormal t))) => FromJSON (ParamSchema ('OpenAPIKindNormal t)) where
+  parseJSON = sopOpenAPIGenericParseJSON
+instance FromJSON (ParamSchema 'OpenAPIKindParamOtherSchema) where
+  parseJSON = sopOpenAPIGenericParseJSON
+instance FromJSON (ParamSchema 'OpenAPIKindSchema) where
+  parseJSON = sopOpenAPIGenericParseJSON
 
 -------------------------------------------------------------------------------
 -- TH splices
@@ -1266,45 +1266,45 @@ deriveGeneric ''Responses
 deriveGeneric ''SecurityScheme
 deriveGeneric ''Schema
 deriveGeneric ''ParamSchema
-deriveGeneric ''Swagger
+deriveGeneric ''OpenAPI
 
-instance HasSwaggerAesonOptions Header where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "header" & saoSubObject ?~ "paramSchema"
-instance HasSwaggerAesonOptions OAuth2Params where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "oauth2" & saoSubObject ?~ "flow"
-instance HasSwaggerAesonOptions Operation where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "operation"
-instance HasSwaggerAesonOptions Param where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "param" & saoSubObject ?~ "schema"
-instance HasSwaggerAesonOptions ParamOtherSchema where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "paramOtherSchema" & saoSubObject ?~ "paramSchema"
-instance HasSwaggerAesonOptions PathItem where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "pathItem"
-instance HasSwaggerAesonOptions Response where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "response"
-instance HasSwaggerAesonOptions Responses where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "responses" & saoSubObject ?~ "responses"
-instance HasSwaggerAesonOptions SecurityScheme where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "securityScheme" & saoSubObject ?~ "type"
-instance HasSwaggerAesonOptions Schema where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "schema" & saoSubObject ?~ "paramSchema"
-instance HasSwaggerAesonOptions Swagger where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "swagger" & saoAdditionalPairs .~ [("swagger", "2.0")]
+instance HasOpenAPIAesonOptions Header where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "header" & saoSubObject ?~ "paramSchema"
+instance HasOpenAPIAesonOptions OAuth2Params where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "oauth2" & saoSubObject ?~ "flow"
+instance HasOpenAPIAesonOptions Operation where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "operation"
+instance HasOpenAPIAesonOptions Param where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "param" & saoSubObject ?~ "schema"
+instance HasOpenAPIAesonOptions ParamOtherSchema where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "paramOtherSchema" & saoSubObject ?~ "paramSchema"
+instance HasOpenAPIAesonOptions PathItem where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "pathItem"
+instance HasOpenAPIAesonOptions Response where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "response"
+instance HasOpenAPIAesonOptions Responses where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "responses" & saoSubObject ?~ "responses"
+instance HasOpenAPIAesonOptions SecurityScheme where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "securityScheme" & saoSubObject ?~ "type"
+instance HasOpenAPIAesonOptions Schema where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "schema" & saoSubObject ?~ "paramSchema"
+instance HasOpenAPIAesonOptions OpenAPI where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "openapi" & saoAdditionalPairs .~ [("openapi", "2.0")]
 
-instance HasSwaggerAesonOptions (ParamSchema ('SwaggerKindNormal t)) where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "paramSchema" & saoSubObject ?~ "items"
-instance HasSwaggerAesonOptions (ParamSchema 'SwaggerKindParamOtherSchema) where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "paramSchema" & saoSubObject ?~ "items"
+instance HasOpenAPIAesonOptions (ParamSchema ('OpenAPIKindNormal t)) where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "paramSchema" & saoSubObject ?~ "items"
+instance HasOpenAPIAesonOptions (ParamSchema 'OpenAPIKindParamOtherSchema) where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "paramSchema" & saoSubObject ?~ "items"
 -- NOTE: Schema doesn't have 'items' sub object!
-instance HasSwaggerAesonOptions (ParamSchema 'SwaggerKindSchema) where
-  swaggerAesonOptions _ = mkSwaggerAesonOptions "paramSchema"
+instance HasOpenAPIAesonOptions (ParamSchema 'OpenAPIKindSchema) where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "paramSchema"
 
 instance AesonDefaultValue (ParamSchema s)
 instance AesonDefaultValue OAuth2Flow
 instance AesonDefaultValue Responses
 instance AesonDefaultValue ParamAnySchema
 instance AesonDefaultValue SecuritySchemeType
-instance AesonDefaultValue (SwaggerType a)
+instance AesonDefaultValue (OpenAPIType a)
 instance AesonDefaultValue MimeList where defaultValue = Just mempty
 instance AesonDefaultValue Info
 instance AesonDefaultValue ParamLocation

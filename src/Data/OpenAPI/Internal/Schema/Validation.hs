@@ -11,14 +11,14 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 -- |
--- Module:      Data.Swagger.Internal.Schema.Validation
+-- Module:      Data.OpenAPI.Internal.Schema.Validation
 -- Copyright:   (c) 2015 GetShopTV
 -- License:     BSD3
 -- Maintainer:  Nickolay Kudasov <nickolay@getshoptv.com>
 -- Stability:   experimental
 --
--- Validate JSON values with Swagger Schema.
-module Data.Swagger.Internal.Schema.Validation where
+-- Validate JSON values with OpenAPI Schema.
+module Data.OpenAPI.Internal.Schema.Validation where
 
 import Control.Applicative
 import Control.Lens
@@ -38,10 +38,10 @@ import qualified Data.Text as Text
 import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 
-import Data.Swagger.Declare
-import Data.Swagger.Internal
-import Data.Swagger.Internal.Schema
-import Data.Swagger.Lens
+import Data.OpenAPI.Declare
+import Data.OpenAPI.Internal
+import Data.OpenAPI.Internal.Schema
+import Data.OpenAPI.Lens
 
 -- | Validate @'ToJSON'@ instance matches @'ToSchema'@ for a given value.
 -- This can be used with QuickCheck to ensure those instances are coherent:
@@ -62,7 +62,7 @@ validateToJSONWithPatternChecker checker = validateJSONWithPatternChecker checke
   where
     (defs, sch) = runDeclare (declareSchema (Proxy :: Proxy a)) mempty
 
--- | Validate JSON @'Value'@ against Swagger @'Schema'@.
+-- | Validate JSON @'Value'@ against OpenAPI @'Schema'@.
 --
 -- prop> validateJSON mempty (toSchema (Proxy :: Proxy Int)) (toJSON (x :: Int)) == []
 --
@@ -71,7 +71,7 @@ validateToJSONWithPatternChecker checker = validateJSONWithPatternChecker checke
 validateJSON :: Definitions Schema -> Schema -> Value -> [ValidationError]
 validateJSON = validateJSONWithPatternChecker (\_pattern _str -> True)
 
--- | Validate JSON @'Value'@ agains Swagger @'ToSchema'@ for a given value and pattern checker.
+-- | Validate JSON @'Value'@ agains OpenAPI @'ToSchema'@ for a given value and pattern checker.
 --
 -- For validation without patterns see @'validateJSON'@.
 validateJSONWithPatternChecker :: (Pattern -> Text -> Bool) -> Definitions Schema -> Schema -> Value -> [ValidationError]
@@ -203,13 +203,13 @@ validateWithSchemaRef :: Referenced Schema -> Value -> Validation s ()
 validateWithSchemaRef (Ref ref)  js = withRef ref $ \sch -> sub sch (validateWithSchema js)
 validateWithSchemaRef (Inline s) js = sub s (validateWithSchema js)
 
--- | Validate JSON @'Value'@ with Swagger @'Schema'@.
+-- | Validate JSON @'Value'@ with OpenAPI @'Schema'@.
 validateWithSchema :: Value -> Validation Schema ()
 validateWithSchema value = do
   validateSchemaType value
   sub_ paramSchema $ validateEnum value
 
--- | Validate JSON @'Value'@ with Swagger @'ParamSchema'@.
+-- | Validate JSON @'Value'@ with OpenAPI @'ParamSchema'@.
 validateWithParamSchema :: Value -> Validation (ParamSchema t) ()
 validateWithParamSchema value = do
   validateParamSchemaType value
@@ -266,9 +266,9 @@ validateArray xs = do
       invalid ("array is too short (size should be >=" ++ show n ++ ")")
 
   check items $ \case
-    SwaggerItemsPrimitive _ itemSchema -> sub itemSchema $ traverse_ validateWithParamSchema xs
-    SwaggerItemsObject itemSchema      -> traverse_ (validateWithSchemaRef itemSchema) xs
-    SwaggerItemsArray itemSchemas -> do
+    OpenAPIItemsPrimitive _ itemSchema -> sub itemSchema $ traverse_ validateWithParamSchema xs
+    OpenAPIItemsObject itemSchema      -> traverse_ (validateWithSchemaRef itemSchema) xs
+    OpenAPIItemsArray itemSchemas -> do
       when (len /= length itemSchemas) $
         invalid ("array size is invalid (should be exactly " ++ show (length itemSchemas) ++ ")")
       sequenceA_ (zipWith validateWithSchemaRef itemSchemas (Vector.toList xs))
@@ -317,7 +317,7 @@ validateObject o = withSchema $ \sch ->
 
     unknownProperty :: Text -> Validation s a
     unknownProperty name = invalid $
-      "property " <> show name <> " is found in JSON value, but it is not mentioned in Swagger schema"
+      "property " <> show name <> " is found in JSON value, but it is not mentioned in OpenAPI schema"
 
 validateEnum :: Value -> Validation (ParamSchema t) ()
 validateEnum value = do
@@ -328,22 +328,22 @@ validateEnum value = do
 validateSchemaType :: Value -> Validation Schema ()
 validateSchemaType value = withSchema $ \sch ->
   case (sch ^. type_, value) of
-    (SwaggerNull,    Null)       -> valid
-    (SwaggerBoolean, Bool _)     -> valid
-    (SwaggerInteger, Number n)   -> sub_ paramSchema (validateInteger n)
-    (SwaggerNumber,  Number n)   -> sub_ paramSchema (validateNumber n)
-    (SwaggerString,  String s)   -> sub_ paramSchema (validateString s)
-    (SwaggerArray,   Array xs)   -> sub_ paramSchema (validateArray xs)
-    (SwaggerObject,  Object o)   -> validateObject o
+    (OpenAPINull,    Null)       -> valid
+    (OpenAPIBoolean, Bool _)     -> valid
+    (OpenAPIInteger, Number n)   -> sub_ paramSchema (validateInteger n)
+    (OpenAPINumber,  Number n)   -> sub_ paramSchema (validateNumber n)
+    (OpenAPIString,  String s)   -> sub_ paramSchema (validateString s)
+    (OpenAPIArray,   Array xs)   -> sub_ paramSchema (validateArray xs)
+    (OpenAPIObject,  Object o)   -> validateObject o
     (t, _) -> invalid $ "expected JSON value of type " ++ show t
 
 validateParamSchemaType :: Value -> Validation (ParamSchema t) ()
 validateParamSchemaType value = withSchema $ \sch ->
   case (sch ^. type_, value) of
-    (SwaggerBoolean, Bool _)     -> valid
-    (SwaggerInteger, Number n)   -> validateInteger n
-    (SwaggerNumber,  Number n)   -> validateNumber n
-    (SwaggerString,  String s)   -> validateString s
-    (SwaggerArray,   Array xs)   -> validateArray xs
+    (OpenAPIBoolean, Bool _)     -> valid
+    (OpenAPIInteger, Number n)   -> validateInteger n
+    (OpenAPINumber,  Number n)   -> validateNumber n
+    (OpenAPIString,  String s)   -> validateString s
+    (OpenAPIArray,   Array xs)   -> validateArray xs
     (t, _) -> invalid $ "expected JSON value of type " ++ show t
 

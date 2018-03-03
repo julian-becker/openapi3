@@ -19,7 +19,7 @@
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 #endif
 #include "overlapping-compat.h"
-module Data.Swagger.Internal.ParamSchema where
+module Data.OpenAPI.Internal.ParamSchema where
 
 import Control.Lens
 import Data.Aeson (ToJSON (..))
@@ -43,9 +43,9 @@ import Numeric.Natural
 import Data.Word
 import Data.UUID.Types (UUID)
 
-import Data.Swagger.Internal
-import Data.Swagger.Lens
-import Data.Swagger.SchemaOptions
+import Data.OpenAPI.Internal
+import Data.OpenAPI.Lens
+import Data.OpenAPI.SchemaOptions
 
 #if __GLASGOW_HASKELL__ < 800
 #else
@@ -57,20 +57,20 @@ import GHC.TypeLits (TypeError, ErrorMessage(..))
 -- | Default schema for binary data (any sequence of octets).
 binaryParamSchema :: ParamSchema t
 binaryParamSchema = mempty
-  & type_ .~ SwaggerString
+  & type_ .~ OpenAPIString
   & format ?~ "binary"
 
 -- | Default schema for binary data (base64 encoded).
 byteParamSchema :: ParamSchema t
 byteParamSchema = mempty
-  & type_ .~ SwaggerString
+  & type_ .~ OpenAPIString
   & format ?~ "byte"
 
 -- | Default schema for password string.
 -- @"password"@ format is used to hint UIs the input needs to be obscured.
 passwordParamSchema :: ParamSchema t
 passwordParamSchema = mempty
-  & type_ .~ SwaggerString
+  & type_ .~ OpenAPIString
   & format ?~ "password"
 
 -- | Convert a type into a plain @'ParamSchema'@.
@@ -86,7 +86,7 @@ passwordParamSchema = mempty
 --
 -- instance ToParamSchema Direction where
 --   toParamSchema _ = mempty
---      & type_ .~ SwaggerString
+--      & type_ .~ OpenAPIString
 --      & enum_ ?~ [ \"Up\", \"Down\" ]
 -- @
 --
@@ -118,17 +118,17 @@ class ToParamSchema a where
   toParamSchema = genericToParamSchema defaultSchemaOptions
 
 instance OVERLAPPING_ ToParamSchema String where
-  toParamSchema _ = mempty & type_ .~ SwaggerString
+  toParamSchema _ = mempty & type_ .~ OpenAPIString
 
 instance ToParamSchema Bool where
-  toParamSchema _ = mempty & type_ .~ SwaggerBoolean
+  toParamSchema _ = mempty & type_ .~ OpenAPIBoolean
 
 instance ToParamSchema Integer where
-  toParamSchema _ = mempty & type_ .~ SwaggerInteger
+  toParamSchema _ = mempty & type_ .~ OpenAPIInteger
 
 instance ToParamSchema Natural where
   toParamSchema _ = mempty
-    & type_            .~ SwaggerInteger
+    & type_            .~ OpenAPIInteger
     & minimum_         ?~ 0
     & exclusiveMinimum ?~ False
 
@@ -154,37 +154,37 @@ instance ToParamSchema Word64 where toParamSchema = toParamSchemaBoundedIntegral
 -- "{\"maximum\":127,\"minimum\":-128,\"type\":\"integer\"}"
 toParamSchemaBoundedIntegral :: forall proxy a t. (Bounded a, Integral a) => proxy a -> ParamSchema t
 toParamSchemaBoundedIntegral _ = mempty
-  & type_ .~ SwaggerInteger
+  & type_ .~ OpenAPIInteger
   & minimum_ ?~ fromInteger (toInteger (minBound :: a))
   & maximum_ ?~ fromInteger (toInteger (maxBound :: a))
 
 instance ToParamSchema Char where
   toParamSchema _ = mempty
-    & type_ .~ SwaggerString
+    & type_ .~ OpenAPIString
     & maxLength ?~ 1
     & minLength ?~ 1
 
 instance ToParamSchema Scientific where
-  toParamSchema _ = mempty & type_ .~ SwaggerNumber
+  toParamSchema _ = mempty & type_ .~ OpenAPINumber
 
 instance HasResolution a => ToParamSchema (Fixed a) where
   toParamSchema _ = mempty
-    & type_      .~ SwaggerNumber
+    & type_      .~ OpenAPINumber
     & multipleOf ?~ (recip . fromInteger $ resolution (Proxy :: Proxy a))
 
 instance ToParamSchema Double where
   toParamSchema _ = mempty
-    & type_  .~ SwaggerNumber
+    & type_  .~ OpenAPINumber
     & format ?~ "double"
 
 instance ToParamSchema Float where
   toParamSchema _ = mempty
-    & type_  .~ SwaggerNumber
+    & type_  .~ OpenAPINumber
     & format ?~ "float"
 
 timeParamSchema :: String -> ParamSchema t
 timeParamSchema fmt = mempty
-  & type_  .~ SwaggerString
+  & type_  .~ OpenAPIString
   & format ?~ T.pack fmt
 
 -- | Format @"date"@ corresponds to @yyyy-mm-dd@ format.
@@ -242,8 +242,8 @@ instance ToParamSchema a => ToParamSchema (Identity a) where toParamSchema _ = t
 
 instance ToParamSchema a => ToParamSchema [a] where
   toParamSchema _ = mempty
-    & type_ .~ SwaggerArray
-    & items ?~ SwaggerItemsPrimitive Nothing (toParamSchema (Proxy :: Proxy a))
+    & type_ .~ OpenAPIArray
+    & items ?~ OpenAPIItemsPrimitive Nothing (toParamSchema (Proxy :: Proxy a))
 
 instance ToParamSchema a => ToParamSchema (V.Vector a) where toParamSchema _ = toParamSchema (Proxy :: Proxy [a])
 instance ToParamSchema a => ToParamSchema (VP.Vector a) where toParamSchema _ = toParamSchema (Proxy :: Proxy [a])
@@ -262,12 +262,12 @@ instance ToParamSchema a => ToParamSchema (HashSet a) where
 -- "{\"type\":\"string\",\"enum\":[\"_\"]}"
 instance ToParamSchema () where
   toParamSchema _ = mempty
-    & type_ .~ SwaggerString
+    & type_ .~ OpenAPIString
     & enum_ ?~ ["_"]
 
 instance ToParamSchema UUID where
   toParamSchema _ = mempty
-    & type_ .~ SwaggerString
+    & type_ .~ OpenAPIString
     & format ?~ "uuid"
 
 -- | A configurable generic @'ParamSchema'@ creator.
@@ -305,7 +305,7 @@ instance (GEnumParamSchema f, GEnumParamSchema g) => GEnumParamSchema (f :+: g) 
 
 instance Constructor c => GEnumParamSchema (C1 c U1) where
   genumParamSchema opts _ s = s
-    & type_ .~ SwaggerString
+    & type_ .~ OpenAPIString
     & enum_ %~ addEnumValue tag
     where
       tag = toJSON (constructorTagModifier opts (conName (Proxy3 :: Proxy3 c f p)))

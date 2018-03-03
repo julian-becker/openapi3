@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE QuasiQuotes #-}
-module Data.SwaggerSpec where
+module Data.OpenAPISpec where
 
 import Prelude ()
 import Prelude.Compat
@@ -15,7 +15,7 @@ import Data.HashMap.Strict (HashMap)
 import qualified Data.Set as Set
 import Data.Text (Text)
 
-import Data.Swagger
+import Data.OpenAPI
 import SpecCommon
 import Test.Hspec hiding (example)
 
@@ -24,10 +24,10 @@ spec = do
   describe "host" $ do
     it "can decode the host port" $ do
       let h = Just $ Host "localhost" (Just (fromInteger 8000))
-          swagger :: Swagger
-          swagger = swaggerExample
+          openapi :: OpenAPI
+          openapi = openapiExample
             & host .~ h
-          parsed :: Swagger = either error id $ eitherDecode' $ encode swagger
+          parsed :: OpenAPI = either error id $ eitherDecode' $ encode openapi
       parsed ^. host `shouldBe` h
   describe "License Object" $ licenseExample <=> licenseExampleJSON
   describe "Contact Object" $ contactExample <=> contactExampleJSON
@@ -43,11 +43,11 @@ spec = do
   describe "Responses Definition Object" $ responsesDefinitionExample <=> responsesDefinitionExampleJSON
   describe "Security Definitions Object" $ securityDefinitionsExample <=> securityDefinitionsExampleJSON
   describe "Composition Schema Example" $ compositionSchemaExample <=> compositionSchemaExampleJSON
-  describe "Swagger Object" $ do
-    context "Todo Example" $ swaggerExample <=> swaggerExampleJSON
+  describe "OpenAPI Object" $ do
+    context "Todo Example" $ openapiExample <=> openapiExampleJSON
     context "PetStore Example" $
       it "decodes successfully" $ do
-        fromJSON petstoreExampleJSON `shouldSatisfy` (\x -> case x of Success (_ :: Swagger) -> True; _ -> False)
+        fromJSON petstoreExampleJSON `shouldSatisfy` (\x -> case x of Success (_ :: OpenAPI) -> True; _ -> False)
 
 main :: IO ()
 main = hspec spec
@@ -58,9 +58,9 @@ main = hspec spec
 
 infoExample :: Info
 infoExample = mempty
-  & title          .~ "Swagger Sample App"
+  & title          .~ "OpenAPI Sample App"
   & description    ?~ "This is a sample server Petstore server."
-  & termsOfService ?~ "http://swagger.io/terms/"
+  & termsOfService ?~ "http://openapi.io/terms/"
   & contact        ?~ contactExample
   & license        ?~ licenseExample
   & version        .~ "1.0.1"
@@ -68,13 +68,13 @@ infoExample = mempty
 infoExampleJSON :: Value
 infoExampleJSON = [aesonQQ|
 {
-  "title": "Swagger Sample App",
+  "title": "OpenAPI Sample App",
   "description": "This is a sample server Petstore server.",
-  "termsOfService": "http://swagger.io/terms/",
+  "termsOfService": "http://openapi.io/terms/",
   "contact": {
     "name": "API Support",
-    "url": "http://www.swagger.io/support",
-    "email": "support@swagger.io"
+    "url": "http://www.openapi.io/support",
+    "email": "support@openapi.io"
   },
   "license": {
     "name": "Apache 2.0",
@@ -91,15 +91,15 @@ infoExampleJSON = [aesonQQ|
 contactExample :: Contact
 contactExample = mempty
   & name  ?~ "API Support"
-  & url   ?~ URL "http://www.swagger.io/support"
-  & email ?~ "support@swagger.io"
+  & url   ?~ URL "http://www.openapi.io/support"
+  & email ?~ "support@openapi.io"
 
 contactExampleJSON :: Value
 contactExampleJSON = [aesonQQ|
 {
   "name": "API Support",
-  "url": "http://www.swagger.io/support",
-  "email": "support@swagger.io"
+  "url": "http://www.openapi.io/support",
+  "email": "support@openapi.io"
 }
 |]
 
@@ -157,7 +157,7 @@ operationExample = mempty
     stringSchema :: ParamLocation -> ParamOtherSchema
     stringSchema loc = mempty
       & in_ .~ loc
-      & type_ .~ SwaggerString
+      & type_ .~ OpenAPIString
 
 operationExampleJSON :: Value
 operationExampleJSON = [aesonQQ|
@@ -223,7 +223,7 @@ operationExampleJSON = [aesonQQ|
 
 schemaPrimitiveExample :: Schema
 schemaPrimitiveExample = mempty
-  & type_  .~ SwaggerString
+  & type_  .~ OpenAPIString
   & format ?~ "email"
 
 schemaPrimitiveExampleJSON :: Value
@@ -236,14 +236,14 @@ schemaPrimitiveExampleJSON = [aesonQQ|
 
 schemaSimpleModelExample :: Schema
 schemaSimpleModelExample = mempty
-  & type_ .~ SwaggerObject
+  & type_ .~ OpenAPIObject
   & required .~ [ "name" ]
   & properties .~
-      [ ("name", Inline (mempty & type_ .~ SwaggerString))
+      [ ("name", Inline (mempty & type_ .~ OpenAPIString))
       , ("address", Ref (Reference "Address"))
       , ("age", Inline $ mempty
             & minimum_ ?~ 0
-            & type_    .~ SwaggerInteger
+            & type_    .~ OpenAPIInteger
             & format   ?~ "int32" ) ]
 
 schemaSimpleModelExampleJSON :: Value
@@ -271,8 +271,8 @@ schemaSimpleModelExampleJSON = [aesonQQ|
 
 schemaModelDictExample :: Schema
 schemaModelDictExample = mempty
-  & type_ .~ SwaggerObject
-  & additionalProperties ?~ Inline (mempty & type_ .~ SwaggerString)
+  & type_ .~ OpenAPIObject
+  & additionalProperties ?~ Inline (mempty & type_ .~ OpenAPIString)
 
 schemaModelDictExampleJSON :: Value
 schemaModelDictExampleJSON = [aesonQQ|
@@ -286,13 +286,13 @@ schemaModelDictExampleJSON = [aesonQQ|
 
 schemaWithExampleExample :: Schema
 schemaWithExampleExample = mempty
-  & type_ .~ SwaggerObject
+  & type_ .~ OpenAPIObject
   & properties .~
       [ ("id", Inline $ mempty
-            & type_  .~ SwaggerInteger
+            & type_  .~ OpenAPIInteger
             & format ?~ "int64" )
       , ("name", Inline $ mempty
-            & type_ .~ SwaggerString) ]
+            & type_ .~ OpenAPIString) ]
   & required .~ [ "name" ]
   & example ?~ [aesonQQ|
     {
@@ -331,19 +331,19 @@ schemaWithExampleExampleJSON = [aesonQQ|
 definitionsExample :: HashMap Text Schema
 definitionsExample =
   [ ("Category", mempty
-      & type_ .~ SwaggerObject
+      & type_ .~ OpenAPIObject
       & properties .~
           [ ("id", Inline $ mempty
-              & type_  .~ SwaggerInteger
+              & type_  .~ OpenAPIInteger
               & format ?~ "int64")
-          , ("name", Inline (mempty & type_ .~ SwaggerString)) ] )
+          , ("name", Inline (mempty & type_ .~ OpenAPIString)) ] )
   , ("Tag", mempty
-      & type_ .~ SwaggerObject
+      & type_ .~ OpenAPIObject
       & properties .~
           [ ("id", Inline $ mempty
-              & type_  .~ SwaggerInteger
+              & type_  .~ OpenAPIInteger
               & format ?~ "int64")
-          , ("name", Inline (mempty & type_ .~ SwaggerString)) ] ) ]
+          , ("name", Inline (mempty & type_ .~ OpenAPIString)) ] ) ]
 
 definitionsExampleJSON :: Value
 definitionsExampleJSON = [aesonQQ|
@@ -387,7 +387,7 @@ paramsDefinitionExample =
       & required ?~ True
       & schema .~ ParamOther (mempty
           & in_    .~ ParamQuery
-          & type_  .~ SwaggerInteger
+          & type_  .~ OpenAPIInteger
           & format ?~ "int32" ))
   , ("limitParam", mempty
       & name .~ "limit"
@@ -395,7 +395,7 @@ paramsDefinitionExample =
       & required ?~ True
       & schema .~ ParamOther (mempty
           & in_    .~ ParamQuery
-          & type_  .~ SwaggerInteger
+          & type_  .~ OpenAPIInteger
           & format ?~ "int32" )) ]
 
 paramsDefinitionExampleJSON :: Value
@@ -452,7 +452,7 @@ securityDefinitionsExample =
       , _securitySchemeDescription = Nothing })
   , ("petstore_auth", SecurityScheme
       { _securitySchemeType = SecuritySchemeOAuth2 (OAuth2Params
-          { _oauth2Flow = OAuth2Implicit "http://swagger.io/api/oauth/dialog"
+          { _oauth2Flow = OAuth2Implicit "http://openapi.io/api/oauth/dialog"
           , _oauth2Scopes =
               [ ("write:pets",  "modify pets in your account")
               , ("read:pets", "read your pets") ] } )
@@ -468,7 +468,7 @@ securityDefinitionsExampleJSON = [aesonQQ|
   },
   "petstore_auth": {
     "type": "oauth2",
-    "authorizationUrl": "http://swagger.io/api/oauth/dialog",
+    "authorizationUrl": "http://openapi.io/api/oauth/dialog",
     "flow": "implicit",
     "scopes": {
       "write:pets": "modify pets in your account",
@@ -479,11 +479,11 @@ securityDefinitionsExampleJSON = [aesonQQ|
 |]
 
 -- =======================================================================
--- Swagger object
+-- OpenAPI object
 -- =======================================================================
 
-swaggerExample :: Swagger
-swaggerExample = mempty
+openapiExample :: OpenAPI
+openapiExample = mempty
   & basePath ?~ "/"
   & schemes ?~ [Http]
   & info .~ (mempty
@@ -491,12 +491,12 @@ swaggerExample = mempty
       & title .~ "Todo API"
       & license ?~ "MIT"
       & license._Just.url ?~ URL "http://mit.com"
-      & description ?~ "This is a an API that tests servant-swagger support for a Todo API")
+      & description ?~ "This is a an API that tests servant-openapi support for a Todo API")
   & paths.at "/todo/{id}" ?~ (mempty & get ?~ ((mempty :: Operation)
       & at 200 ?~ Inline (mempty
           & description .~ "OK"
           & schema ?~ Inline (mempty
-              & type_ .~ SwaggerObject
+              & type_ .~ OpenAPIObject
               & example ?~ [aesonQQ|
                   {
                     "created": 100,
@@ -505,9 +505,9 @@ swaggerExample = mempty
               & description ?~ "This is some real Todo right here"
               & properties .~
                   [ ("created", Inline $ mempty
-                      & type_  .~ SwaggerInteger
+                      & type_  .~ OpenAPIInteger
                       & format ?~ "int32")
-                  , ("description", Inline (mempty & type_ .~ SwaggerString))]))
+                  , ("description", Inline (mempty & type_ .~ OpenAPIString))]))
       & produces ?~ MimeList [ "application/json" ]
       & parameters .~
           [ Inline $ mempty
@@ -516,13 +516,13 @@ swaggerExample = mempty
               & description ?~ "TodoId param"
               & schema .~ ParamOther (mempty
                   & in_ .~ ParamPath
-                  & type_ .~ SwaggerString ) ]
+                  & type_ .~ OpenAPIString ) ]
       & tags .~ Set.fromList [ "todo" ] ))
 
-swaggerExampleJSON :: Value
-swaggerExampleJSON = [aesonQQ|
+openapiExampleJSON :: Value
+openapiExampleJSON = [aesonQQ|
 {
-    "swagger": "2.0",
+    "openapi": "2.0",
     "basePath": "/",
     "schemes": [
         "http"
@@ -534,7 +534,7 @@ swaggerExampleJSON = [aesonQQ|
             "url": "http://mit.com",
             "name": "MIT"
         },
-        "description": "This is a an API that tests servant-swagger support for a Todo API"
+        "description": "This is a an API that tests servant-openapi support for a Todo API"
     },
     "paths": {
         "/todo/{id}": {
@@ -585,21 +585,21 @@ swaggerExampleJSON = [aesonQQ|
 petstoreExampleJSON :: Value
 petstoreExampleJSON = [aesonQQ|
 {
-   "swagger":"2.0",
+   "openapi":"2.0",
    "info":{
-      "description":"This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.",
+      "description":"This is a sample server Petstore server.  You can find out more about OpenAPI at [http://openapi.io](http://openapi.io) or on [irc.freenode.net, #openapi](http://openapi.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.",
       "version":"1.0.0",
-      "title":"Swagger Petstore",
-      "termsOfService":"http://swagger.io/terms/",
+      "title":"OpenAPI Petstore",
+      "termsOfService":"http://openapi.io/terms/",
       "contact":{
-         "email":"apiteam@swagger.io"
+         "email":"apiteam@openapi.io"
       },
       "license":{
          "name":"Apache 2.0",
          "url":"http://www.apache.org/licenses/LICENSE-2.0.html"
       }
    },
-   "host":"petstore.swagger.io",
+   "host":"petstore.openapi.io",
    "basePath":"/v2",
    "tags":[
       {
@@ -607,7 +607,7 @@ petstoreExampleJSON = [aesonQQ|
          "description":"Everything about your Pets",
          "externalDocs":{
             "description":"Find out more",
-            "url":"http://swagger.io"
+            "url":"http://openapi.io"
          }
       },
       {
@@ -619,7 +619,7 @@ petstoreExampleJSON = [aesonQQ|
          "description":"Operations about user",
          "externalDocs":{
             "description":"Find out more about our store",
-            "url":"http://swagger.io"
+            "url":"http://openapi.io"
          }
       }
    ],
@@ -1425,7 +1425,7 @@ petstoreExampleJSON = [aesonQQ|
    "securityDefinitions":{
       "petstore_auth":{
          "type":"oauth2",
-         "authorizationUrl":"http://petstore.swagger.io/api/oauth/dialog",
+         "authorizationUrl":"http://petstore.openapi.io/api/oauth/dialog",
          "flow":"implicit",
          "scopes":{
             "write:pets":"modify pets in your account",
@@ -1610,22 +1610,22 @@ petstoreExampleJSON = [aesonQQ|
       }
    },
    "externalDocs":{
-      "description":"Find out more about Swagger",
-      "url":"http://swagger.io"
+      "description":"Find out more about OpenAPI",
+      "url":"http://openapi.io"
    }
 }
 |]
 
 compositionSchemaExample :: Schema
 compositionSchemaExample = mempty
-  & type_ .~ SwaggerObject
-  & Data.Swagger.allOf ?~ [
+  & type_ .~ OpenAPIObject
+  & Data.OpenAPI.allOf ?~ [
       Ref (Reference "Other")
     , Inline (mempty
-             & type_ .~ SwaggerObject
+             & type_ .~ OpenAPIObject
              & properties .~
                   [ ("greet", Inline $ mempty
-                            & type_ .~ SwaggerString) ])
+                            & type_ .~ OpenAPIString) ])
   ]
 
 compositionSchemaExampleJSON :: Value

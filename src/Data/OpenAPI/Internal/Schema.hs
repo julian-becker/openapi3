@@ -22,7 +22,7 @@
 {-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 #endif
 #include "overlapping-compat.h"
-module Data.Swagger.Internal.Schema where
+module Data.OpenAPI.Internal.Schema where
 
 import Prelude ()
 import Prelude.Compat
@@ -61,13 +61,13 @@ import Data.Word
 import GHC.Generics
 import qualified Data.UUID.Types as UUID
 
-import Data.Swagger.Declare
-import Data.Swagger.Internal
-import Data.Swagger.Internal.ParamSchema (ToParamSchema(..))
-import Data.Swagger.Lens hiding (name, schema)
-import qualified Data.Swagger.Lens as Swagger
-import Data.Swagger.SchemaOptions
-import Data.Swagger.Internal.TypeShape
+import Data.OpenAPI.Declare
+import Data.OpenAPI.Internal
+import Data.OpenAPI.Internal.ParamSchema (ToParamSchema(..))
+import Data.OpenAPI.Lens hiding (name, schema)
+import qualified Data.OpenAPI.Lens as OpenAPI
+import Data.OpenAPI.SchemaOptions
+import Data.OpenAPI.Internal.TypeShape
 
 #if __GLASGOW_HASKELL__ < 800
 #else
@@ -101,7 +101,7 @@ rename name (NamedSchema _ schema) = NamedSchema name schema
 --
 -- import Control.Lens
 -- import Data.Proxy
--- import Data.Swagger
+-- import Data.OpenAPI
 --
 -- data Coord = Coord { x :: Double, y :: Double }
 --
@@ -109,7 +109,7 @@ rename name (NamedSchema _ schema) = NamedSchema name schema
 --   declareNamedSchema _ = do
 --     doubleSchema <- declareSchemaRef (Proxy :: Proxy Double)
 --     return $ NamedSchema (Just \"Coord\") $ mempty
---       & type_ .~ SwaggerObject
+--       & type_ .~ OpenAPIObject
 --       & properties .~
 --           [ (\"x\", doubleSchema)
 --           , (\"y\", doubleSchema)
@@ -292,20 +292,20 @@ inlineNonRecursiveSchemas defs = inlineSchemasWhen nonRecursive defs
 -- | Default schema for binary data (any sequence of octets).
 binarySchema :: Schema
 binarySchema = mempty
-  & type_ .~ SwaggerString
+  & type_ .~ OpenAPIString
   & format ?~ "binary"
 
 -- | Default schema for binary data (base64 encoded).
 byteSchema :: Schema
 byteSchema = mempty
-  & type_ .~ SwaggerString
+  & type_ .~ OpenAPIString
   & format ?~ "byte"
 
 -- | Default schema for password string.
 -- @"password"@ format is used to hint UIs the input needs to be obscured.
 passwordSchema :: Schema
 passwordSchema = mempty
-  & type_ .~ SwaggerString
+  & type_ .~ OpenAPIString
   & format ?~ "password"
 
 -- | Make an unrestrictive sketch of a @'Schema'@ based on a @'ToJSON'@ instance.
@@ -331,15 +331,15 @@ sketchSchema = sketch . toJSON
     sketch js@(Bool _) = go js
     sketch js = go js & example ?~ js
 
-    go Null       = mempty & type_ .~ SwaggerNull
-    go (Bool _)   = mempty & type_ .~ SwaggerBoolean
-    go (String _) = mempty & type_   .~ SwaggerString
-    go (Number _) = mempty & type_ .~ SwaggerNumber
+    go Null       = mempty & type_ .~ OpenAPINull
+    go (Bool _)   = mempty & type_ .~ OpenAPIBoolean
+    go (String _) = mempty & type_   .~ OpenAPIString
+    go (Number _) = mempty & type_ .~ OpenAPINumber
     go (Array xs) = mempty
-      & type_   .~ SwaggerArray
+      & type_   .~ OpenAPIArray
       & items ?~ case ischema of
-          Just s -> SwaggerItemsObject (Inline s)
-          _      -> SwaggerItemsArray (map Inline ys)
+          Just s -> OpenAPIItemsObject (Inline s)
+          _      -> OpenAPIItemsArray (map Inline ys)
       where
         ys = map go (V.toList xs)
         allSame = and ((zipWith (==)) ys (tail ys))
@@ -348,7 +348,7 @@ sketchSchema = sketch . toJSON
           (z:_) | allSame -> Just z
           _               -> Nothing
     go (Object o) = mempty
-      & type_         .~ SwaggerObject
+      & type_         .~ OpenAPIObject
       & required      .~ HashMap.keys o
       & properties    .~ fmap (Inline . go) (InsOrdHashMap.fromHashMap o)
 
@@ -371,34 +371,34 @@ sketchSchema = sketch . toJSON
 sketchStrictSchema :: ToJSON a => a -> Schema
 sketchStrictSchema = go . toJSON
   where
-    go Null       = mempty & type_ .~ SwaggerNull
+    go Null       = mempty & type_ .~ OpenAPINull
     go js@(Bool _) = mempty
-      & type_ .~ SwaggerBoolean
+      & type_ .~ OpenAPIBoolean
       & enum_ ?~ [js]
     go js@(String s) = mempty
-      & type_ .~ SwaggerString
+      & type_ .~ OpenAPIString
       & maxLength ?~ fromIntegral (T.length s)
       & minLength ?~ fromIntegral (T.length s)
       & pattern   ?~ s
       & enum_     ?~ [js]
     go js@(Number n) = mempty
-      & type_       .~ SwaggerNumber
+      & type_       .~ OpenAPINumber
       & maximum_    ?~ n
       & minimum_    ?~ n
       & multipleOf  ?~ n
       & enum_       ?~ [js]
     go js@(Array xs) = mempty
-      & type_       .~ SwaggerArray
+      & type_       .~ OpenAPIArray
       & maxItems    ?~ fromIntegral sz
       & minItems    ?~ fromIntegral sz
-      & items       ?~ SwaggerItemsArray (map (Inline . go) (V.toList xs))
+      & items       ?~ OpenAPIItemsArray (map (Inline . go) (V.toList xs))
       & uniqueItems ?~ allUnique
       & enum_       ?~ [js]
       where
         sz = length xs
         allUnique = sz == HashSet.size (HashSet.fromList (V.toList xs))
     go js@(Object o) = mempty
-      & type_         .~ SwaggerObject
+      & type_         .~ OpenAPIObject
       & required      .~ names
       & properties    .~ fmap (Inline . go) (InsOrdHashMap.fromHashMap o)
       & maxProperties ?~ fromIntegral (length names)
@@ -414,8 +414,8 @@ instance OVERLAPPABLE_ ToSchema a => ToSchema [a] where
   declareNamedSchema _ = do
     ref <- declareSchemaRef (Proxy :: Proxy a)
     return $ unnamed $ mempty
-      & type_ .~ SwaggerArray
-      & items ?~ SwaggerItemsObject ref
+      & type_ .~ OpenAPIArray
+      & items ?~ OpenAPIItemsObject ref
 
 instance OVERLAPPING_ ToSchema String where declareNamedSchema = plain . paramSchemaToSchema
 instance ToSchema Bool    where declareNamedSchema = plain . paramSchemaToSchema
@@ -434,7 +434,7 @@ instance ToSchema Word64  where declareNamedSchema = plain . paramSchemaToSchema
 
 instance ToSchema Char where
   declareNamedSchema proxy = plain (paramSchemaToSchema proxy)
-    & mapped.Swagger.schema.example ?~ toJSON '?'
+    & mapped.OpenAPI.schema.example ?~ toJSON '?'
 
 instance ToSchema Scientific  where declareNamedSchema = plain . paramSchemaToSchema
 instance ToSchema Double      where declareNamedSchema = plain . paramSchemaToSchema
@@ -464,7 +464,7 @@ instance (ToSchema a, ToSchema b, ToSchema c, ToSchema d, ToSchema e, ToSchema f
 
 timeSchema :: T.Text -> Schema
 timeSchema fmt = mempty
-  & type_ .~ SwaggerString
+  & type_ .~ OpenAPIString
   & format ?~ fmt
 
 -- | Format @"date"@ corresponds to @yyyy-mm-dd@ format.
@@ -524,7 +524,7 @@ instance (ToJSONKey k, ToSchema k, ToSchema v) => ToSchema (Map k v) where
       declareObjectMapSchema = do
         schema <- declareSchemaRef (Proxy :: Proxy v)
         return $ unnamed $ mempty
-          & type_ .~ SwaggerObject
+          & type_ .~ OpenAPIObject
           & additionalProperties ?~ schema
 
 instance (ToJSONKey k, ToSchema k, ToSchema v) => ToSchema (HashMap k v) where
@@ -536,7 +536,7 @@ instance ToSchema a => ToSchema (Map String a) where
   declareNamedSchema _ = do
     schema <- declareSchemaRef (Proxy :: Proxy a)
     return $ unnamed $ mempty
-      & type_ .~ SwaggerObject
+      & type_ .~ OpenAPIObject
       & additionalProperties ?~ schema
 
 instance ToSchema a => ToSchema (Map T.Text  a) where declareNamedSchema _ = declareNamedSchema (Proxy :: Proxy (Map String a))
@@ -578,7 +578,7 @@ instance ToSchema a => ToSchema (Identity a) where declareNamedSchema _ = declar
 -- "{\"maximum\":32767,\"minimum\":-32768,\"type\":\"integer\"}"
 toSchemaBoundedIntegral :: forall a proxy. (Bounded a, Integral a) => proxy a -> Schema
 toSchemaBoundedIntegral _ = mempty
-  & type_ .~ SwaggerInteger
+  & type_ .~ OpenAPIInteger
   & minimum_ ?~ fromInteger (toInteger (minBound :: a))
   & maximum_ ?~ fromInteger (toInteger (maxBound :: a))
 
@@ -624,7 +624,7 @@ declareSchemaBoundedEnumKeyMapping _ = case toJSONKey :: ToJSONKeyFunction key o
       let allKeys   = [minBound..maxBound :: key]
           mkPair k  =  (keyToText k, valueRef)
       return $ mempty
-        & type_ .~ SwaggerObject
+        & type_ .~ OpenAPIObject
         & properties .~ InsOrdHashMap.fromList (map mkPair allKeys)
 
 -- | A 'Schema' for a mapping with 'Bounded' 'Enum' keys.
@@ -661,14 +661,14 @@ genericDeclareNamedSchema = genericDeclareNamedSchemaUnrestricted
 -- | A configurable generic @'Schema'@ creator.
 --
 -- Unlike 'genericDeclareSchema' also works for mixed sum types.
--- Use with care since some Swagger tools do not support well schemas for mixed sum types.
+-- Use with care since some OpenAPI tools do not support well schemas for mixed sum types.
 genericDeclareSchemaUnrestricted :: (Generic a, GToSchema (Rep a)) => SchemaOptions -> proxy a -> Declare (Definitions Schema) Schema
 genericDeclareSchemaUnrestricted opts proxy = _namedSchemaSchema <$> genericDeclareNamedSchemaUnrestricted opts proxy
 
 -- | A configurable generic @'NamedSchema'@ creator.
 --
 -- Unlike 'genericDeclareNamedSchema' also works for mixed sum types.
--- Use with care since some Swagger tools do not support well schemas for mixed sum types.
+-- Use with care since some OpenAPI tools do not support well schemas for mixed sum types.
 genericDeclareNamedSchemaUnrestricted :: forall a proxy. (Generic a, GToSchema (Rep a)) =>
   SchemaOptions -> proxy a -> Declare (Definitions Schema) NamedSchema
 genericDeclareNamedSchemaUnrestricted opts _ = gdeclareNamedSchema opts (Proxy :: Proxy (Rep a)) mempty
@@ -699,8 +699,8 @@ paramSchemaToSchema _ = mempty & paramSchema .~ toParamSchema (Proxy :: Proxy a)
 
 nullarySchema :: Schema
 nullarySchema = mempty
-  & type_ .~ SwaggerArray
-  & items ?~ SwaggerItemsArray []
+  & type_ .~ OpenAPIArray
+  & items ?~ OpenAPIItemsArray []
 
 gtoNamedSchema :: GToSchema f => SchemaOptions -> proxy f -> NamedSchema
 gtoNamedSchema opts proxy = undeclare $ gdeclareNamedSchema opts proxy mempty
@@ -730,7 +730,7 @@ instance (Selector s, GToSchema f) => GToSchema (C1 c (S1 s f)) where
     | unwrapUnaryRecords opts = fieldSchema
     | otherwise =
         case schema ^. items of
-          Just (SwaggerItemsArray [_]) -> fieldSchema
+          Just (OpenAPIItemsArray [_]) -> fieldSchema
           _ -> do
             declare defs
             return (unnamed schema)
@@ -758,10 +758,10 @@ gdeclareSchemaRef opts proxy = do
       return $ Ref (Reference name)
     _ -> Inline <$> gdeclareSchema opts proxy
 
-appendItem :: Referenced Schema -> Maybe (SwaggerItems 'SwaggerKindSchema) -> Maybe (SwaggerItems 'SwaggerKindSchema)
-appendItem x Nothing = Just (SwaggerItemsArray [x])
-appendItem x (Just (SwaggerItemsArray xs)) = Just (SwaggerItemsArray (xs ++ [x]))
-appendItem _ _ = error "GToSchema.appendItem: cannot append to SwaggerItemsObject"
+appendItem :: Referenced Schema -> Maybe (OpenAPIItems 'OpenAPIKindSchema) -> Maybe (OpenAPIItems 'OpenAPIKindSchema)
+appendItem x Nothing = Just (OpenAPIItemsArray [x])
+appendItem x (Just (OpenAPIItemsArray xs)) = Just (OpenAPIItemsArray (xs ++ [x]))
+appendItem _ _ = error "GToSchema.appendItem: cannot append to OpenAPIItemsObject"
 
 withFieldSchema :: forall proxy s f. (Selector s, GToSchema f) =>
   SchemaOptions -> proxy s f -> Bool -> Schema -> Declare (Definitions Schema) Schema
@@ -770,12 +770,12 @@ withFieldSchema opts _ isRequiredField schema = do
   return $
     if T.null fname
       then schema
-        & type_ .~ SwaggerArray
+        & type_ .~ OpenAPIArray
         & items %~ appendItem ref
         & maxItems %~ Just . maybe 1 (+1)   -- increment maxItems
         & minItems %~ Just . maybe 1 (+1)   -- increment minItems
       else schema
-        & type_ .~ SwaggerObject
+        & type_ .~ OpenAPIObject
         & properties . at fname ?~ ref
         & if isRequiredField
             then required %~ (++ [fname])
@@ -812,7 +812,7 @@ gdeclareNamedSumSchema opts proxy s
     (sumSchema, All allNullary) = undeclare (runWriterT declareSumSchema)
 
     toStringTag schema = mempty
-      & type_ .~ SwaggerString
+      & type_ .~ OpenAPIString
       & enum_ ?~ map toJSON  (schema ^.. properties.ifolded.asIndex)
 
 type AllNullary = All
@@ -826,7 +826,7 @@ instance (GSumToSchema f, GSumToSchema g) => GSumToSchema (f :+: g) where
 gsumConToSchemaWith :: forall c f proxy. (GToSchema (C1 c f), Constructor c) =>
   Referenced Schema -> SchemaOptions -> proxy (C1 c f) -> Schema -> Schema
 gsumConToSchemaWith ref opts _ schema = schema
-  & type_ .~ SwaggerObject
+  & type_ .~ OpenAPIObject
   & properties . at tag ?~ ref
   & maxProperties ?~ 1
   & minProperties ?~ 1
@@ -857,6 +857,6 @@ data Proxy2 a b = Proxy2
 data Proxy3 a b c = Proxy3
 
 -- $setup
--- >>> import Data.Swagger
+-- >>> import Data.OpenAPI
 -- >>> import Data.Aeson (encode)
 -- >>> import Data.Aeson.Types (toJSONKeyText)

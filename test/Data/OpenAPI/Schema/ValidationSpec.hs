@@ -4,7 +4,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Data.Swagger.Schema.ValidationSpec where
+module Data.OpenAPI.Schema.ValidationSpec where
 
 import Control.Applicative
 import Data.Aeson
@@ -26,8 +26,8 @@ import Data.Set (Set)
 import Data.Word
 import GHC.Generics
 
-import Data.Swagger
-import Data.Swagger.Declare
+import Data.OpenAPI
+import Data.OpenAPI.Declare
 
 import Test.Hspec
 import Test.Hspec.QuickCheck

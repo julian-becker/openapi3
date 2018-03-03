@@ -4,12 +4,12 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 -- |
--- Module:      Data.Swagger.Declare
+-- Module:      Data.OpenAPI.Declare
 -- Maintainer:  Nickolay Kudasov <nickolay@getshoptv.com>
 -- Stability:   experimental
 --
 -- Declare monad transformer and associated functions.
-module Data.Swagger.Declare where
+module Data.OpenAPI.Declare where
 
 import Prelude ()
 import Prelude.Compat

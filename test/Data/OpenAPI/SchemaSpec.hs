@@ -2,7 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
-module Data.Swagger.SchemaSpec where
+module Data.OpenAPI.SchemaSpec where
 
 import Prelude ()
 import Prelude.Compat
@@ -19,8 +19,8 @@ import Data.Map (Map)
 import qualified Data.Text as Text
 import GHC.Generics
 
-import Data.Swagger
-import Data.Swagger.Declare
+import Data.OpenAPI
+import Data.OpenAPI.Declare
 
 import SpecCommon
 import Test.Hspec
