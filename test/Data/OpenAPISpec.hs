@@ -522,7 +522,7 @@ openapiExample = mempty
 openapiExampleJSON :: Value
 openapiExampleJSON = [aesonQQ|
 {
-    "openapi": "2.0",
+    "openapi": "3.0",
     "basePath": "/",
     "schemes": [
         "http"
@@ -585,7 +585,7 @@ openapiExampleJSON = [aesonQQ|
 petstoreExampleJSON :: Value
 petstoreExampleJSON = [aesonQQ|
 {
-   "openapi":"2.0",
+   "openapi":"3.0",
    "info":{
       "description":"This is a sample server Petstore server.  You can find out more about OpenAPI at [http://openapi.io](http://openapi.io) or on [irc.freenode.net, #openapi](http://openapi.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.",
       "version":"1.0.0",

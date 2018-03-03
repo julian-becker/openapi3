@@ -1289,7 +1289,7 @@ instance HasOpenAPIAesonOptions SecurityScheme where
 instance HasOpenAPIAesonOptions Schema where
   openapiAesonOptions _ = mkOpenAPIAesonOptions "schema" & saoSubObject ?~ "paramSchema"
 instance HasOpenAPIAesonOptions OpenAPI where
-  openapiAesonOptions _ = mkOpenAPIAesonOptions "openapi" & saoAdditionalPairs .~ [("openapi", "2.0")]
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "openapi" & saoAdditionalPairs .~ [("openapi", "3.0")]
 
 instance HasOpenAPIAesonOptions (ParamSchema ('OpenAPIKindNormal t)) where
   openapiAesonOptions _ = mkOpenAPIAesonOptions "paramSchema" & saoSubObject ?~ "items"

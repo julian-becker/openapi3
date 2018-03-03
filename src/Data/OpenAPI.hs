@@ -141,7 +141,7 @@ import Data.OpenAPI.Internal
 -- In this library you can use @'mempty'@ for a default/empty value. For instance:
 --
 -- >>> encode (mempty :: OpenAPI)
--- "{\"openapi\":\"2.0\",\"info\":{\"version\":\"\",\"title\":\"\"}}"
+-- "{\"openapi\":\"3.0\",\"info\":{\"version\":\"\",\"title\":\"\"}}"
 --
 -- As you can see some spec properties (e.g. @"version"@) are there even when the spec is empty.
 -- That is because these properties are actually required ones.
@@ -187,7 +187,7 @@ import Data.OpenAPI.Internal
 --         & at 200 ?~ ("OK" & _Inline.schema ?~ Ref (Reference "User"))
 --         & at 404 ?~ "User info not found")) ]
 -- :}
--- "{\"openapi\":\"2.0\",\"info\":{\"version\":\"\",\"title\":\"\"},\"paths\":{\"/user\":{\"get\":{\"produces\":[\"application/json\"],\"responses\":{\"404\":{\"description\":\"User info not found\"},\"200\":{\"schema\":{\"$ref\":\"#/definitions/User\"},\"description\":\"OK\"}}}}},\"definitions\":{\"User\":{\"type\":\"string\"}}}"
+-- "{\"openapi\":\"3.0\",\"info\":{\"version\":\"\",\"title\":\"\"},\"paths\":{\"/user\":{\"get\":{\"produces\":[\"application/json\"],\"responses\":{\"404\":{\"description\":\"User info not found\"},\"200\":{\"schema\":{\"$ref\":\"#/definitions/User\"},\"description\":\"OK\"}}}}},\"definitions\":{\"User\":{\"type\":\"string\"}}}"
 --
 -- In the snippet above we declare an API with a single path @/user@. This path provides method @GET@
 -- which produces @application/json@ output. It should respond with code @200@ and body specified
@@ -274,7 +274,7 @@ import Data.OpenAPI.Internal
 -- >>> encode $ toSchema (Proxy :: Proxy Person)
 -- "{\"required\":[\"name\",\"age\"],\"properties\":{\"name\":{\"type\":\"string\"},\"age\":{\"type\":\"integer\"}},\"type\":\"object\"}"
 --
--- Please note that not all valid Haskell data types will have a proper openapi schema. For example while we can derive a 
+-- Please note that not all valid Haskell data types will have a proper openapi schema. For example while we can derive a
 -- schema for basic enums like
 --
 -- >>> data SampleEnum = ChoiceOne | ChoiceTwo deriving Generic

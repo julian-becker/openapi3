@@ -79,9 +79,9 @@ allOperations = paths.traverse.template
 -- >>> let api = (mempty :: OpenAPI) & paths .~ [("/user", mempty & get ?~ ok & post ?~ ok)]
 -- >>> let sub = (mempty :: OpenAPI) & paths .~ [("/user", mempty & get ?~ mempty)]
 -- >>> encode api
--- "{\"openapi\":\"2.0\",\"info\":{\"version\":\"\",\"title\":\"\"},\"paths\":{\"/user\":{\"get\":{\"responses\":{\"200\":{\"description\":\"OK\"}}},\"post\":{\"responses\":{\"200\":{\"description\":\"OK\"}}}}}}"
+-- "{\"openapi\":\"3.0\",\"info\":{\"version\":\"\",\"title\":\"\"},\"paths\":{\"/user\":{\"get\":{\"responses\":{\"200\":{\"description\":\"OK\"}}},\"post\":{\"responses\":{\"200\":{\"description\":\"OK\"}}}}}}"
 -- >>> encode $ api & operationsOf sub . at 404 ?~ "Not found"
--- "{\"openapi\":\"2.0\",\"info\":{\"version\":\"\",\"title\":\"\"},\"paths\":{\"/user\":{\"get\":{\"responses\":{\"404\":{\"description\":\"Not found\"},\"200\":{\"description\":\"OK\"}}},\"post\":{\"responses\":{\"200\":{\"description\":\"OK\"}}}}}}"
+-- "{\"openapi\":\"3.0\",\"info\":{\"version\":\"\",\"title\":\"\"},\"paths\":{\"/user\":{\"get\":{\"responses\":{\"404\":{\"description\":\"Not found\"},\"200\":{\"description\":\"OK\"}}},\"post\":{\"responses\":{\"200\":{\"description\":\"OK\"}}}}}}"
 operationsOf :: OpenAPI -> Traversal' OpenAPI Operation
 operationsOf sub = paths.itraversed.withIndex.subops
   where
@@ -138,7 +138,7 @@ declareResponse proxy = do
 -- >>> let api = (mempty :: OpenAPI) & paths .~ [("/user", mempty & get ?~ mempty)]
 -- >>> let res = declareResponse (Proxy :: Proxy Day)
 -- >>> encode $ api & setResponse 200 res
--- "{\"openapi\":\"2.0\",\"info\":{\"version\":\"\",\"title\":\"\"},\"paths\":{\"/user\":{\"get\":{\"responses\":{\"200\":{\"schema\":{\"$ref\":\"#/definitions/Day\"},\"description\":\"\"}}}}},\"definitions\":{\"Day\":{\"example\":\"2016-07-22\",\"format\":\"date\",\"type\":\"string\"}}}"
+-- "{\"openapi\":\"3.0\",\"info\":{\"version\":\"\",\"title\":\"\"},\"paths\":{\"/user\":{\"get\":{\"responses\":{\"200\":{\"schema\":{\"$ref\":\"#/definitions/Day\"},\"description\":\"\"}}}}},\"definitions\":{\"Day\":{\"example\":\"2016-07-22\",\"format\":\"date\",\"type\":\"string\"}}}"
 --
 -- See also @'setResponseWith'@.
 setResponse :: HttpStatusCode -> Declare (Definitions Schema) Response -> OpenAPI -> OpenAPI
