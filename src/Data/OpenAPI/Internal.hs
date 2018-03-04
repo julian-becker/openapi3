@@ -73,10 +73,6 @@ data OpenAPI = OpenAPI
     -- The metadata can be used by the clients if needed.
     _openAPIInfo :: Info
 
-    -- | The host (name or ip) serving the API. It MAY include a port.
-    -- If the host is not included, the host serving the documentation is to be used (including the port).
-  , _openAPIHost :: Maybe Host
-
     -- | The base path on which the API is served, which is relative to the host.
     -- If it is not included, the API is served directly under the host.
     -- The value MUST start with a leading slash (/).
@@ -178,28 +174,6 @@ data License = License
 
 instance IsString License where
   fromString s = License (fromString s) Nothing
-
--- | The host (name or ip) serving the API. It MAY include a port.
-data Host = Host
-  { _hostName :: HostName         -- ^ Host name.
-  , _hostPort :: Maybe PortNumber -- ^ Optional port.
-  } deriving (Eq, Show, Generic, Typeable)
-
-instance IsString Host where
-  fromString s = Host s Nothing
-
-hostConstr :: Constr
-hostConstr = mkConstr hostDataType "Host" [] Prefix
-
-hostDataType :: DataType
-hostDataType = mkDataType "Data.OpenAPI.Host" [hostConstr]
-
-instance Data Host where
-  gunfold k z c = case constrIndex c of
-    1 -> k (k (z (\name mport -> Host name (fromInteger <$> mport))))
-    _ -> error $ "Data.Data.gunfold: Constructor " ++ show c ++ " is not of type Host."
-  toConstr (Host _ _) = hostConstr
-  dataTypeOf _ = hostDataType
 
 -- | The transfer protocol of the API.
 data Scheme
@@ -1023,12 +997,6 @@ instance ToJSON (ParamSchema t) => ToJSON (OpenAPIItems t) where
   toJSON (OpenAPIItemsObject x) = object [ "items" .= x ]
   toJSON (OpenAPIItemsArray  x) = object [ "items" .= x ]
 
-instance ToJSON Host where
-  toJSON (Host host mport) = toJSON $
-    case mport of
-      Nothing -> host
-      Just port -> host ++ ":" ++ show port
-
 instance ToJSON MimeList where
   toJSON (MimeList xs) = toJSON (map show xs)
 
@@ -1151,15 +1119,6 @@ instance FromJSON (OpenAPIItems 'OpenAPIKindParamOtherSchema) where
 instance FromJSON (OpenAPIItems 'OpenAPIKindSchema) where
   parseJSON js@(Object _) = OpenAPIItemsObject <$> parseJSON js
   parseJSON js@(Array _)  = OpenAPIItemsArray  <$> parseJSON js
-  parseJSON _ = empty
-
-instance FromJSON Host where
-  parseJSON (String s) = case map Text.unpack $ Text.split (== ':') s of
-    [host] -> return $ Host host Nothing
-    [host, port] -> case readMaybe port of
-      Nothing -> fail $ "Invalid port `" ++ port ++ "'"
-      Just p -> return $ Host host (Just (fromInteger p))
-    _ -> fail $ "Invalid host `" ++ Text.unpack s ++ "'"
   parseJSON _ = empty
 
 instance FromJSON MimeList where

@@ -38,7 +38,6 @@ module Data.OpenAPI (
 
   -- * OpenAPI specification
   OpenAPI(..),
-  Host(..),
   Scheme(..),
 
   -- ** Info types

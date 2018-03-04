@@ -29,7 +29,6 @@ import Data.Text (Text)
 -- * Classy lenses
 
 makeFields ''OpenAPI
-makeFields ''Host
 makeFields ''Info
 makeFields ''Contact
 makeFields ''License

@@ -21,14 +21,6 @@ import Test.Hspec hiding (example)
 
 spec :: Spec
 spec = do
-  describe "host" $ do
-    it "can decode the host port" $ do
-      let h = Just $ Host "localhost" (Just (fromInteger 8000))
-          openapi :: OpenAPI
-          openapi = openapiExample
-            & host .~ h
-          parsed :: OpenAPI = either error id $ eitherDecode' $ encode openapi
-      parsed ^. host `shouldBe` h
   describe "License Object" $ licenseExample <=> licenseExampleJSON
   describe "Contact Object" $ contactExample <=> contactExampleJSON
   describe "Info Object" $ infoExample <=> infoExampleJSON
@@ -599,7 +591,6 @@ petstoreExampleJSON = [aesonQQ|
          "url":"http://www.apache.org/licenses/LICENSE-2.0.html"
       }
    },
-   "host":"petstore.openapi.io",
    "basePath":"/v2",
    "tags":[
       {
