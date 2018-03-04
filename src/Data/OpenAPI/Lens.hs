@@ -30,6 +30,7 @@ import Data.Text (Text)
 
 makeFields ''OpenAPI
 makeFields ''Info
+makeFields ''Components
 makeFields ''Contact
 makeFields ''License
 makeLensesWith openapiFieldRules ''PathItem

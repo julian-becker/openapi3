@@ -156,7 +156,7 @@
     * Introduce `OpenAPIItems` GADT, replacing `Items` and `SchemaItems` in `ParamSchema` (see [#24](https://github.com/GetShopTV/openapi3/pull/24));
     * Move type, format and items fields to `ParamSchema` (former `SchemaComon`);
     * Prepend reference path automatically (see [commit 49d1fad](https://github.com/GetShopTV/openapi3/commit/49d1fadd2100644e70c442667180d0d73e107a5f))
-      and thus remove `"#/definitions/"` from user code, leaving much clearer `Reference "Name"`;
+      and thus remove `"#/components/schemas/"` from user code, leaving much clearer `Reference "Name"`;
     * Change `Data.OpenAPI.Schema` (see [#19](https://github.com/GetShopTV/openapi3/pull/19)):
         * Change the only method of `ToSchema` to `declareNamedSchema` which should produce a `NamedSchema`
           along with a list of schema definitions used to produce it;

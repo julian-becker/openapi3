@@ -73,13 +73,10 @@ data OpenAPI = OpenAPI
     -- The metadata can be used by the clients if needed.
     _openAPIInfo :: Info
 
-    -- | A list of MIME types the APIs can consume.
-    -- This is global to all APIs but can be overridden on specific API calls.
-  , _openAPIConsumes :: MimeList
-
-    -- | A list of MIME types the APIs can produce.
-    -- This is global to all APIs but can be overridden on specific API calls.
-  , _openAPIProduces :: MimeList
+    -- | An array of Server Objects, which provide connectivity information to a
+    -- target server. If the servers property is not provided, or is an empty
+    -- array, the default value would be a Server Object with a url value of /.
+  , _openAPIServers :: Definitions Server
 
     -- | The available paths and operations for the API.
     -- Holds the relative paths to the individual endpoints.
@@ -87,18 +84,7 @@ data OpenAPI = OpenAPI
   , _openAPIPaths :: InsOrdHashMap FilePath PathItem
 
     -- | An object to hold data types produced and consumed by operations.
-  , _openAPIDefinitions :: Definitions Schema
-
-    -- | An object to hold parameters that can be used across operations.
-    -- This property does not define global parameters for all operations.
-  , _openAPIParameters :: Definitions Param
-
-    -- | An object to hold responses that can be used across operations.
-    -- This property does not define global responses for all operations.
-  , _openAPIResponses :: Definitions Response
-
-    -- | Security scheme definitions that can be used across the specification.
-  , _openAPISecurityDefinitions :: Definitions SecurityScheme
+  , _openAPIComponents :: Components
 
     -- | A declaration of which security schemes are applied for the API as a whole.
     -- The list of values describes alternative security schemes that can be used
@@ -115,6 +101,86 @@ data OpenAPI = OpenAPI
 
     -- | Additional external documentation.
   , _openAPIExternalDocs :: Maybe ExternalDocs
+  } deriving (Eq, Show, Generic, Data, Typeable)
+
+-- | Holds a set of reusable objects for different aspects of the OAS.
+-- All objects defined within the components object will have no effect on the
+-- API unless they are explicitly referenced from properties outside the
+-- components object.
+data Components = Components
+  { -- | An object to hold reusable Schema Objects.
+    _componentsSchemas :: Definitions Schema
+
+    -- | An object to hold reusable Response Objects.
+  , _componentsResponses :: Definitions Response
+
+    -- | An object to hold reusable Parameter Objects.
+  , _componentsParameters :: Definitions Param
+
+    -- | An object to hold reusable Example Objects.
+  , _componentsExamples :: Definitions Example
+
+    -- | An object to hold reusable Request Body Objects.
+  , _componentsRequestBodies :: Definitions RequestBody
+
+    -- | An object to hold reusable Header Objects.
+  , _componentsHeaders :: Definitions Header
+
+    -- | An object to hold reusable Security Scheme Objects.
+  , _componentsSecuritySchemes :: Definitions SecurityScheme
+
+    -- | An object to hold reusable Link Objects.
+  , _componentsLinks :: Definitions Link
+
+    -- | An object to hold reusable Callback Objects.
+  , _componentsCallbacks :: Definitions Callback
+  } deriving (Eq, Show, Generic, Data, Typeable)
+
+-- | A map of possible out-of band callbacks related to the parent operation.
+-- Each value in the map is a Path Item Object that describes a set of requests
+-- that may be initiated by the API provider and the expected responses.
+-- The key value used to identify the callback object is an expression, evaluated
+-- at runtime, that identifies a URL to use for the callback operation.
+data Callback = Callback
+  { -- TODO!!
+  } deriving (Eq, Show, Generic, Data, Typeable)
+
+-- | The Link object represents a possible design-time link for a response.
+-- The presence of a link does not guarantee the caller's ability to successfully
+-- invoke it, rather it provides a known relationship and traversal mechanism between
+-- responses and other operations.
+-- Unlike dynamic links (i.e. links provided in the response payload), the OAS
+-- linking mechanism does not require link information in the runtime response.
+-- For computing links, and providing instructions to execute them, a runtime
+-- expression is used for accessing values in an operation and using them as parameters
+-- while invoking the linked operation.
+data Link = Link
+  { -- | A relative or absolute reference to an OAS operation. This field is mutually
+    -- exclusive of the operationId field, and MUST point to an Operation Object.
+    -- Relative operationRef values MAY be used to locate an existing Operation Object
+    -- in the OpenAPI definition.
+    _linkOperationRef :: Maybe Text
+
+   -- | The name of an existing, resolvable OAS operation, as defined with a unique
+   -- operationId. This field is mutually exclusive of the operationRef field.
+  , _linkOperationId :: Maybe Text
+
+    -- | A map representing parameters to pass to an operation as specified with
+    -- operationId or identified via operationRef. The key is the parameter name
+    -- to be used, whereas the value can be a constant or an expression to be evaluated
+    -- and passed to the linked operation. The parameter name can be qualified using
+    -- the parameter location [{in}.]{name} for operations that use the same parameter
+    -- name in different locations (e.g. path.id).
+  , _linkParameters :: Maybe (Map Text Text) -- TODO: Parameter locations
+
+    -- | A literal value or {expression} to use as a request body when calling the target operation.
+  , _linkRequestBody :: Maybe Text -- TODO: Runtime expressions
+
+    -- | A description of the link. CommonMark syntax MAY be used for rich text representation.
+  , _linkDescription :: Maybe Text
+
+    -- | A server object to be used by the target operation.
+  , _linkServer :: Maybe Server
   } deriving (Eq, Show, Generic, Data, Typeable)
 
 -- | The object provides metadata about the API.
@@ -282,6 +348,44 @@ instance Data MimeList where
     _ -> error $ "Data.Data.gunfold: Constructor " ++ show c ++ " is not of type MimeList."
   toConstr (MimeList _) = mimeListConstr
   dataTypeOf _ = mimeListDataType
+
+-- | An object representing a Server.
+data Server = Server
+  { -- | REQUIRED. A URL to the target host. This URL supports Server Variables
+    -- and MAY be relative, to indicate that the host location is relative to the
+    -- location where the OpenAPI document is being served. Variable substitutions
+    -- will be made when a variable is named in {brackets}.
+    _serverUrl :: URL
+
+    -- | An optional string describing the host designated by the URL.
+    -- CommonMark syntax MAY be used for rich text representation.
+  , _serverDescription :: Maybe Text
+
+    -- | A map between a variable name and its value. The value is used for
+    -- substitution in the server's URL template.
+  , _serverVariables :: Definitions ServerVariable
+  } deriving (Eq, Show, Generic, Data, Typeable)
+
+
+
+
+-- | An object representing a Server Variable for server URL template substitution.
+data ServerVariable = ServerVariable
+  { -- | An enumeration of string values to be used if the substitution options
+    -- are from a limited set.
+    _serverVariableEnum :: Maybe [Text]
+
+    -- | REQUIRED. The default value to use for substitution, and to send, if an
+    -- alternate value is not supplied. Unlike the Schema Object's default, this
+    -- value MUST be provided by the consumer.
+  , _serverVariableDefault :: Text
+
+    -- | An optional description for the server variable.
+    -- CommonMark syntax MAY be used for rich text representation.
+  , _serverVariableDescription :: Maybe Text
+  } deriving (Eq, Show, Generic, Data, Typeable)
+
+
 
 -- | Describes a single operation parameter.
 -- A unique parameter is defined by a combination of a name and location.
@@ -665,6 +769,28 @@ instance Data Example where
   toConstr (Example _) = exampleConstr
   dataTypeOf _ = exampleDataType
 
+
+-- | Describes a single request body.
+data RequestBody = RequestBody {
+  -- | A brief description of the request body. This could contain examples of use.
+  -- CommonMark syntax MAY be used for rich text representation.
+    _requestBodyDescription :: Maybe Text
+
+  -- | REQUIRED. The content of the request body. The key is a media type or
+  -- media type range and the value describes it. For requests that match multiple
+  -- keys, only the most specific key is applicable.
+  -- e.g. "text/plain" overrides "text/*"
+  , _requestBodyContent :: InsOrdHashMap Text MediaTypeDescription
+
+    -- | Determines if the request body is required in the request.
+    -- Defaults to false.
+  , _requestBodyRequired :: Bool
+  } deriving (Eq, Show, Generic, Data, Typeable)
+
+
+data MediaTypeDescription = MediaTypeDescription
+  {} deriving (Eq, Show, Generic, Data, Typeable)
+
 -- | The location of the API key.
 data ApiKeyLocation
   = ApiKeyQuery
@@ -778,6 +904,10 @@ instance Monoid Info where
   mempty = genericMempty
   mappend = genericMappend
 
+instance Monoid Components where
+  mempty = genericMempty
+  mappend = genericMappend
+
 instance Monoid Contact where
   mempty = genericMempty
   mappend = genericMappend
@@ -831,6 +961,7 @@ instance Monoid Example where
 -- =======================================================================
 
 instance OpenAPIMonoid Info
+instance OpenAPIMonoid Components
 instance OpenAPIMonoid PathItem
 instance OpenAPIMonoid Schema
 instance OpenAPIMonoid (ParamSchema t)
@@ -877,6 +1008,24 @@ instance ToJSON ParamLocation where
 instance ToJSON Info where
   toJSON = genericToJSON (jsonPrefix "Info")
 
+instance ToJSON Callback where
+  toJSON = genericToJSON (jsonPrefix "Callback")
+
+instance ToJSON Link where
+  toJSON = genericToJSON (jsonPrefix "Link")
+
+instance ToJSON RequestBody where
+  toJSON = genericToJSON (jsonPrefix "RequestBody")
+
+instance ToJSON Server where
+  toJSON = genericToJSON (jsonPrefix "Server")
+
+instance ToJSON MediaTypeDescription where
+  toJSON = genericToJSON (jsonPrefix "MediaTypeDescription")
+
+instance ToJSON ServerVariable where
+  toJSON = genericToJSON (jsonPrefix "ServerVariable")
+
 instance ToJSON Contact where
   toJSON = genericToJSON (jsonPrefix "Contact")
 
@@ -910,6 +1059,27 @@ instance FromJSON ParamLocation where
 
 instance FromJSON Info where
   parseJSON = genericParseJSON (jsonPrefix "Info")
+
+instance FromJSON Components where
+  parseJSON = genericParseJSON (jsonPrefix "Components")
+
+instance FromJSON Callback where
+  parseJSON = genericParseJSON (jsonPrefix "Callback")
+
+instance FromJSON Link where
+  parseJSON = genericParseJSON (jsonPrefix "Link")
+
+instance FromJSON RequestBody where
+  parseJSON = genericParseJSON (jsonPrefix "Link")
+
+instance FromJSON Server where
+  parseJSON = genericParseJSON (jsonPrefix "Server")
+
+instance FromJSON MediaTypeDescription where
+  parseJSON = genericParseJSON (jsonPrefix "MediaTypeDescription")
+
+instance FromJSON ServerVariable where
+  parseJSON = genericParseJSON (jsonPrefix "ServerVariable")
 
 instance FromJSON Contact where
   parseJSON = genericParseJSON (jsonPrefix "Contact")
@@ -966,6 +1136,10 @@ instance ToJSON SecuritySchemeType where
     <+> object [ "type" .= ("oauth2" :: Text) ]
 
 instance ToJSON OpenAPI where
+  toJSON = sopOpenAPIGenericToJSON
+  DEFINE_TOENCODING
+
+instance ToJSON Components where
   toJSON = sopOpenAPIGenericToJSON
   DEFINE_TOENCODING
 
@@ -1029,9 +1203,9 @@ referencedToJSON :: ToJSON a => Text -> Referenced a -> Value
 referencedToJSON prefix (Ref (Reference ref)) = object [ "$ref" .= (prefix <> ref) ]
 referencedToJSON _ (Inline x) = toJSON x
 
-instance ToJSON (Referenced Schema)   where toJSON = referencedToJSON "#/definitions/"
-instance ToJSON (Referenced Param)    where toJSON = referencedToJSON "#/parameters/"
-instance ToJSON (Referenced Response) where toJSON = referencedToJSON "#/responses/"
+instance ToJSON (Referenced Schema)   where toJSON = referencedToJSON "#/components/schemas/"
+instance ToJSON (Referenced Param)    where toJSON = referencedToJSON "#/components/parameters/"
+instance ToJSON (Referenced Response) where toJSON = referencedToJSON "#/components/responses/"
 
 instance ToJSON (OpenAPIType t) where
   toJSON OpenAPIArray   = "array"
@@ -1168,9 +1342,9 @@ referencedParseJSON prefix js@(Object o) = do
         Just suffix -> pure (Reference suffix)
 referencedParseJSON _ _ = fail "referenceParseJSON: not an object"
 
-instance FromJSON (Referenced Schema)   where parseJSON = referencedParseJSON "#/definitions/"
-instance FromJSON (Referenced Param)    where parseJSON = referencedParseJSON "#/parameters/"
-instance FromJSON (Referenced Response) where parseJSON = referencedParseJSON "#/responses/"
+instance FromJSON (Referenced Schema)   where parseJSON = referencedParseJSON "#/components/schemas/"
+instance FromJSON (Referenced Param)    where parseJSON = referencedParseJSON "#/components/parameters/"
+instance FromJSON (Referenced Response) where parseJSON = referencedParseJSON "#/components/responses/"
 
 instance FromJSON Xml where
   parseJSON = genericParseJSON (jsonPrefix "xml")
@@ -1217,6 +1391,7 @@ deriveGeneric ''SecurityScheme
 deriveGeneric ''Schema
 deriveGeneric ''ParamSchema
 deriveGeneric ''OpenAPI
+deriveGeneric ''Components
 
 instance HasOpenAPIAesonOptions Header where
   openapiAesonOptions _ = mkOpenAPIAesonOptions "header" & saoSubObject ?~ "paramSchema"
@@ -1240,6 +1415,8 @@ instance HasOpenAPIAesonOptions Schema where
   openapiAesonOptions _ = mkOpenAPIAesonOptions "schema" & saoSubObject ?~ "paramSchema"
 instance HasOpenAPIAesonOptions OpenAPI where
   openapiAesonOptions _ = mkOpenAPIAesonOptions "openapi" & saoAdditionalPairs .~ [("openapi", "3.0")]
+instance HasOpenAPIAesonOptions Components where
+  openapiAesonOptions _ = mkOpenAPIAesonOptions "components"
 
 instance HasOpenAPIAesonOptions (ParamSchema ('OpenAPIKindNormal t)) where
   openapiAesonOptions _ = mkOpenAPIAesonOptions "paramSchema" & saoSubObject ?~ "items"
@@ -1257,4 +1434,5 @@ instance AesonDefaultValue SecuritySchemeType
 instance AesonDefaultValue (OpenAPIType a)
 instance AesonDefaultValue MimeList where defaultValue = Just mempty
 instance AesonDefaultValue Info
+instance AesonDefaultValue Components where defaultValue = Just mempty
 instance AesonDefaultValue ParamLocation

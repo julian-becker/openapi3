@@ -250,7 +250,7 @@ schemaSimpleModelExampleJSON = [aesonQQ|
       "type": "string"
     },
     "address": {
-      "$ref": "#/definitions/Address"
+      "$ref": "#/components/schemas/Address"
     },
     "age": {
       "type": "integer",
@@ -631,7 +631,7 @@ petstoreExampleJSON = [aesonQQ|
                   "description":"Pet object that needs to be added to the store",
                   "required":true,
                   "schema":{
-                     "$ref":"#/definitions/Pet"
+                     "$ref":"#/components/schemas/Pet"
                   }
                }
             ],
@@ -671,7 +671,7 @@ petstoreExampleJSON = [aesonQQ|
                   "description":"Pet object that needs to be added to the store",
                   "required":true,
                   "schema":{
-                     "$ref":"#/definitions/Pet"
+                     "$ref":"#/components/schemas/Pet"
                   }
                }
             ],
@@ -733,7 +733,7 @@ petstoreExampleJSON = [aesonQQ|
                   "schema":{
                      "type":"array",
                      "items":{
-                        "$ref":"#/definitions/Pet"
+                        "$ref":"#/components/schemas/Pet"
                      }
                   }
                },
@@ -782,7 +782,7 @@ petstoreExampleJSON = [aesonQQ|
                   "schema":{
                      "type":"array",
                      "items":{
-                        "$ref":"#/definitions/Pet"
+                        "$ref":"#/components/schemas/Pet"
                      }
                   }
                },
@@ -826,7 +826,7 @@ petstoreExampleJSON = [aesonQQ|
                "200":{
                   "description":"successful operation",
                   "schema":{
-                     "$ref":"#/definitions/Pet"
+                     "$ref":"#/components/schemas/Pet"
                   }
                },
                "400":{
@@ -978,7 +978,7 @@ petstoreExampleJSON = [aesonQQ|
                "200":{
                   "description":"successful operation",
                   "schema":{
-                     "$ref":"#/definitions/ApiResponse"
+                     "$ref":"#/components/schemas/ApiResponse"
                   }
                }
             },
@@ -1042,7 +1042,7 @@ petstoreExampleJSON = [aesonQQ|
                   "description":"order placed for purchasing the pet",
                   "required":true,
                   "schema":{
-                     "$ref":"#/definitions/Order"
+                     "$ref":"#/components/schemas/Order"
                   }
                }
             ],
@@ -1050,7 +1050,7 @@ petstoreExampleJSON = [aesonQQ|
                "200":{
                   "description":"successful operation",
                   "schema":{
-                     "$ref":"#/definitions/Order"
+                     "$ref":"#/components/schemas/Order"
                   }
                },
                "400":{
@@ -1087,7 +1087,7 @@ petstoreExampleJSON = [aesonQQ|
                "200":{
                   "description":"successful operation",
                   "schema":{
-                     "$ref":"#/definitions/Order"
+                     "$ref":"#/components/schemas/Order"
                   }
                },
                "400":{
@@ -1148,7 +1148,7 @@ petstoreExampleJSON = [aesonQQ|
                   "description":"Created user object",
                   "required":true,
                   "schema":{
-                     "$ref":"#/definitions/User"
+                     "$ref":"#/components/schemas/User"
                   }
                }
             ],
@@ -1180,7 +1180,7 @@ petstoreExampleJSON = [aesonQQ|
                   "schema":{
                      "type":"array",
                      "items":{
-                        "$ref":"#/definitions/User"
+                        "$ref":"#/components/schemas/User"
                      }
                   }
                }
@@ -1213,7 +1213,7 @@ petstoreExampleJSON = [aesonQQ|
                   "schema":{
                      "type":"array",
                      "items":{
-                        "$ref":"#/definitions/User"
+                        "$ref":"#/components/schemas/User"
                      }
                   }
                }
@@ -1323,7 +1323,7 @@ petstoreExampleJSON = [aesonQQ|
                "200":{
                   "description":"successful operation",
                   "schema":{
-                     "$ref":"#/definitions/User"
+                     "$ref":"#/components/schemas/User"
                   }
                },
                "400":{
@@ -1359,7 +1359,7 @@ petstoreExampleJSON = [aesonQQ|
                   "description":"Updated user object",
                   "required":true,
                   "schema":{
-                     "$ref":"#/definitions/User"
+                     "$ref":"#/components/schemas/User"
                   }
                }
             ],
@@ -1534,7 +1534,7 @@ petstoreExampleJSON = [aesonQQ|
                "format":"int64"
             },
             "category":{
-               "$ref":"#/definitions/Category"
+               "$ref":"#/components/schemas/Category"
             },
             "name":{
                "type":"string",
@@ -1557,7 +1557,7 @@ petstoreExampleJSON = [aesonQQ|
                   "wrapped":true
                },
                "items":{
-                  "$ref":"#/definitions/Tag"
+                  "$ref":"#/components/schemas/Tag"
                }
             },
             "status":{
@@ -1615,7 +1615,7 @@ compositionSchemaExampleJSON = [aesonQQ|
   "type": "object",
   "allOf": [
       {
-         "$ref": "#/definitions/Other"
+         "$ref": "#/components/schemas/Other"
       },
       {
         "type": "object",

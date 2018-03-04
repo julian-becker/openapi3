@@ -118,7 +118,7 @@ applyTagsFor ops ts swag = swag
 -- necessary schema definitions.
 --
 -- >>> encode $ runDeclare (declareResponse (Proxy :: Proxy Day)) mempty
--- "[{\"Day\":{\"example\":\"2016-07-22\",\"format\":\"date\",\"type\":\"string\"}},{\"description\":\"\",\"schema\":{\"$ref\":\"#/definitions/Day\"}}]"
+-- "[{\"Day\":{\"example\":\"2016-07-22\",\"format\":\"date\",\"type\":\"string\"}},{\"description\":\"\",\"schema\":{\"$ref\":\"#/components/schemas/Day\"}}]"
 declareResponse :: ToSchema a => proxy a -> Declare (Definitions Schema) Response
 declareResponse proxy = do
   s <- declareSchemaRef proxy
@@ -138,7 +138,7 @@ declareResponse proxy = do
 -- >>> let api = (mempty :: OpenAPI) & paths .~ [("/user", mempty & get ?~ mempty)]
 -- >>> let res = declareResponse (Proxy :: Proxy Day)
 -- >>> encode $ api & setResponse 200 res
--- "{\"openapi\":\"3.0\",\"info\":{\"version\":\"\",\"title\":\"\"},\"paths\":{\"/user\":{\"get\":{\"responses\":{\"200\":{\"schema\":{\"$ref\":\"#/definitions/Day\"},\"description\":\"\"}}}}},\"definitions\":{\"Day\":{\"example\":\"2016-07-22\",\"format\":\"date\",\"type\":\"string\"}}}"
+-- "{\"openapi\":\"3.0\",\"info\":{\"version\":\"\",\"title\":\"\"},\"paths\":{\"/user\":{\"get\":{\"responses\":{\"200\":{\"schema\":{\"$ref\":\"#/components/schemas/Day\"},\"description\":\"\"}}}}},\"components\":{\"schemas\":{\"Day\":{\"example\":\"2016-07-22\",\"format\":\"date\",\"type\":\"string\"}}}}"
 --
 -- See also @'setResponseWith'@.
 setResponse :: HttpStatusCode -> Declare (Definitions Schema) Response -> OpenAPI -> OpenAPI
@@ -166,7 +166,7 @@ setResponseWith = setResponseForWith allOperations
 -- See also @'setResponseForWith'@.
 setResponseFor :: Traversal' OpenAPI Operation -> HttpStatusCode -> Declare (Definitions Schema) Response -> OpenAPI -> OpenAPI
 setResponseFor ops code dres swag = swag
-  & definitions %~ (<> defs)
+  & components . schemas %~ (<> defs)
   & ops . at code ?~ Inline res
   where
     (defs, res) = runDeclare dres mempty
@@ -180,13 +180,13 @@ setResponseFor ops code dres swag = swag
 -- See also @'setResponseFor'@.
 setResponseForWith :: Traversal' OpenAPI Operation -> (Response -> Response -> Response) -> HttpStatusCode -> Declare (Definitions Schema) Response -> OpenAPI -> OpenAPI
 setResponseForWith ops f code dres swag = swag
-  & definitions %~ (<> defs)
+  & components . schemas %~ (<> defs)
   & ops . at code %~ Just . Inline . combine
   where
     (defs, new) = runDeclare dres mempty
 
-    combine (Just (Ref (Reference n))) = case swag ^. responses.at n of
+    combine (Just (Ref (Reference n))) = case swag ^. components . responses . at n of
       Just old -> f old new
-      Nothing  -> new -- response name can't be dereferenced, replacing with new response
+      Nothing -> new -- response name can't be dereferenced, replacing with new response
     combine (Just (Inline old)) = f old new
     combine Nothing = new

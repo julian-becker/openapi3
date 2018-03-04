@@ -38,6 +38,7 @@ module Data.OpenAPI (
 
   -- * OpenAPI specification
   OpenAPI(..),
+  Components(..),
   Scheme(..),
 
   -- ** Info types
@@ -179,18 +180,18 @@ import Data.OpenAPI.Internal
 --
 -- >>> :{
 -- encode $ (mempty :: OpenAPI)
---   & definitions .~ [ ("User", mempty & type_ .~ OpenAPIString) ]
+--   & components.schemas .~ [ ("User", mempty & type_ .~ OpenAPIString) ]
 --   & paths .~
 --     [ ("/user", mempty & get ?~ (mempty
 --         & produces ?~ MimeList ["application/json"]
 --         & at 200 ?~ ("OK" & _Inline.schema ?~ Ref (Reference "User"))
 --         & at 404 ?~ "User info not found")) ]
 -- :}
--- "{\"openapi\":\"3.0\",\"info\":{\"version\":\"\",\"title\":\"\"},\"paths\":{\"/user\":{\"get\":{\"produces\":[\"application/json\"],\"responses\":{\"404\":{\"description\":\"User info not found\"},\"200\":{\"schema\":{\"$ref\":\"#/definitions/User\"},\"description\":\"OK\"}}}}},\"definitions\":{\"User\":{\"type\":\"string\"}}}"
+-- "{\"openapi\":\"3.0\",\"info\":{\"version\":\"\",\"title\":\"\"},\"paths\":{\"/user\":{\"get\":{\"produces\":[\"application/json\"],\"responses\":{\"404\":{\"description\":\"User info not found\"},\"200\":{\"schema\":{\"$ref\":\"#/components/schemas/User\"},\"description\":\"OK\"}}}}},\"components\":{\"schemas\":{\"User\":{\"type\":\"string\"}}}}"
 --
 -- In the snippet above we declare an API with a single path @/user@. This path provides method @GET@
 -- which produces @application/json@ output. It should respond with code @200@ and body specified
--- by schema @User@ which is defined in @'definitions'@ property of openapi specification.
+-- by schema @User@ which is defined in @'component / @'schemas '@ property of openapi specification.
 -- Alternatively it may respond with code @404@ meaning that user info is not found.
 --
 -- For convenience, @openapi3@ uses /classy field lenses/. It means that

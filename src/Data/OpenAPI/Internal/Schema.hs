@@ -179,7 +179,7 @@ schemaName = _namedSchemaName . toNamedSchema
 -- "{\"maximum\":127,\"minimum\":-128,\"type\":\"integer\"}"
 --
 -- >>> encode $ toSchema (Proxy :: Proxy [Day])
--- "{\"items\":{\"$ref\":\"#/definitions/Day\"},\"type\":\"array\"}"
+-- "{\"items\":{\"$ref\":\"#/components/schemas/Day\"},\"type\":\"array\"}"
 toSchema :: ToSchema a => proxy a -> Schema
 toSchema = _namedSchemaSchema . toNamedSchema
 
@@ -190,7 +190,7 @@ toSchema = _namedSchemaSchema . toNamedSchema
 -- "{\"type\":\"integer\"}"
 --
 -- >>> encode $ toSchemaRef (Proxy :: Proxy Day)
--- "{\"$ref\":\"#/definitions/Day\"}"
+-- "{\"$ref\":\"#/components/schemas/Day\"}"
 toSchemaRef :: ToSchema a => proxy a -> Referenced Schema
 toSchemaRef = undeclare . declareSchemaRef
 
