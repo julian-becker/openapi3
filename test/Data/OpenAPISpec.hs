@@ -476,7 +476,6 @@ securityDefinitionsExampleJSON = [aesonQQ|
 
 openapiExample :: OpenAPI
 openapiExample = mempty
-  & schemes ?~ [Http]
   & info .~ (mempty
       & version .~ "1.0"
       & title .~ "Todo API"
@@ -514,9 +513,6 @@ openapiExampleJSON :: Value
 openapiExampleJSON = [aesonQQ|
 {
     "openapi": "3.0",
-    "schemes": [
-        "http"
-    ],
     "info": {
         "version": "1.0",
         "title": "Todo API",
@@ -610,9 +606,6 @@ petstoreExampleJSON = [aesonQQ|
             "url":"http://openapi.io"
          }
       }
-   ],
-   "schemes":[
-      "http"
    ],
    "paths":{
       "/pet":{

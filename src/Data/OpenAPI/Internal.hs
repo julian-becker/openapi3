@@ -73,10 +73,6 @@ data OpenAPI = OpenAPI
     -- The metadata can be used by the clients if needed.
     _openAPIInfo :: Info
 
-    -- | The transfer protocol of the API.
-    -- If the schemes is not included, the default scheme to be used is the one used to access the OpenAPI definition itself.
-  , _openAPISchemes :: Maybe [Scheme]
-
     -- | A list of MIME types the APIs can consume.
     -- This is global to all APIs but can be overridden on specific API calls.
   , _openAPIConsumes :: MimeList
